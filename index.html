@@ -3,13 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My First Website</title>
+    <title>Reframing | Otherworld Theme Camp</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500&family=Lora:italic,wght@0,400;1,400&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1>Welcome to the Refrmaing Website</h1>
-    <p>This is a simple index.html file example.</p>
-    
-    <!-- You can add links, images, and other content here -->
-    <a href="https://www.rotaryphone.com">Visit a helpful resource</a>
+
+    <header class="hero">
+        <div class="overlay">
+            <h1>Reframing</h1>
+            <p class="tagline">Otherworld Theme Camp</p>
+        </div>
+    </header>
+
+    <main>
+        <section id="about" class="container">
+            <h2>The Practice of Reframing</h2>
+            <p>Reframing is a gentle Cognitive Behavioral Therapy (CBT) technique. It allows us to identify and shift rigid interpretations of our past, changing the "frame" around a memory to foster a more balanced and compassionate perspective.</p>
+        </section>
+
+        <section class="projects container">
+            <div class="card" id="inner-child">
+                <div class="icon">🌿</div>
+                <h3>The Inner Child Postbox</h3>
+                <p>Find a moment of stillness. Listen to whispered affirmations designed to help you re-parent your younger self and soften old narratives.</p>
+                <button onclick="toggleAudio()">Listen to a Sample</button>
+            </div>
+
+            <div class="card" id="postcard">
+                <div class="icon">✉️</div>
+                <h3>The 9-Month Echo</h3>
+                <p>Write a postcard to your future self. Share your reflections from the dust. We will hold your words and mail them to you nine months from now, like a seed blooming in another season.</p>
+                <button id="remindBtn">Set a Reflection Reminder</button>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Built with love for Otherworld &copy; 2026</p>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>

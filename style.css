@@ -1,0 +1,97 @@
+:root {
+    --forest-deep: #2d3a27;
+    --moss: #5a6e4b;
+    --mist: #f0f4ef;
+    --bark: #6d594f;
+    --accent: #a3b18a;
+}
+
+body {
+    margin: 0;
+    font-family: 'Quicksand', sans-serif;
+    background-color: var(--mist);
+    color: var(--forest-deep);
+    line-height: 1.6;
+}
+
+h1, h2, h3 {
+    font-family: 'Lora', serif;
+    font-weight: 400;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+}
+
+.hero {
+    height: 60vh;
+    background: linear-gradient(rgba(45, 58, 39, 0.6), rgba(45, 58, 39, 0.6)), 
+                url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&q=80&w=1000');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+}
+
+.hero h1 {
+    font-size: 4rem;
+    margin-bottom: 0;
+    letter-spacing: 4px;
+}
+
+.projects {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: -50px;
+}
+
+.card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    flex: 1;
+    min-width: 300px;
+    transition: transform 0.3s ease;
+    border-bottom: 4px solid var(--moss);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+button {
+    background-color: var(--moss);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 1rem;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background-color: var(--forest-deep);
+}
+
+footer {
+    padding: 3rem;
+    text-align: center;
+    font-style: italic;
+    opacity: 0.7;
+}

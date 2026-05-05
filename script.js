@@ -23,3 +23,41 @@ window.addEventListener('scroll', () => {
         }
     });
 });
+
+// Custom Audio Player Logic
+const audio = document.getElementById('affirmationAudio');
+const playBtn = document.getElementById('playBtn');
+const progressWrapper = document.getElementById('progressWrapper');
+const progressFill = document.getElementById('progressFill');
+
+if (audio && playBtn) {
+    // Toggle Play/Pause
+    playBtn.addEventListener('click', () => {
+        if (audio.paused) {
+            audio.play();
+            playBtn.textContent = '⏸';
+        } else {
+            audio.pause();
+            playBtn.textContent = '▶';
+        }
+    });
+
+    // Update Progress Bar
+    audio.addEventListener('timeupdate', () => {
+        const percent = (audio.currentTime / audio.duration) * 100;
+        progressFill.style.width = `${percent}%`;
+    });
+
+    // Click to Seek
+    progressWrapper.addEventListener('click', (e) => {
+        const rect = progressWrapper.getBoundingClientRect();
+        const pos = (e.clientX - rect.left) / rect.width;
+        audio.currentTime = pos * audio.duration;
+    });
+
+    // Reset when audio ends
+    audio.addEventListener('ended', () => {
+        playBtn.textContent = '▶';
+        progressFill.style.width = '0%';
+    });
+}

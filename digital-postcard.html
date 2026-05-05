@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Echo | Reframing Test</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500&family=Lora:italic,wght@0,400;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* Form specific styles for the test page */
+        .form-container {
+            max-width: 600px;
+            margin: 3rem auto;
+            background: white;
+            padding: 3rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border-top: 4px solid var(--moss);
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--forest-deep);
+            font-weight: 500;
+        }
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid #d8e2d3;
+            border-radius: 8px;
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--mist);
+            box-sizing: border-box;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--moss);
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="hero" style="height: 30vh;">
+        <div class="overlay">
+            <h1>The 9-Month Echo</h1>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="form-container">
+            <h2>Write to Your Future Self</h2>
+            <p>Take a deep breath. Write down your reflections. We will keep them safe and email them to you in 9 months.</p>
+            
+            <form id="echoForm">
+                <div class="form-group">
+                    <label for="participantName">What do you want to be called?</label>
+                    <input type="text" id="participantName" required placeholder="Playa name or real name">
+                </div>
+                <div class="form-group">
+                    <label for="participantEmail">Where should we send this?</label>
+                    <input type="email" id="participantEmail" required placeholder="your.email@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="reflectionText">Your Reflection</label>
+                    <textarea id="reflectionText" required placeholder="Dear future me..."></textarea>
+                </div>
+                <button type="submit">Seal and Send to the Future</button>
+            </form>
+            
+            <div id="successMessage" style="display: none; margin-top: 2rem; color: var(--moss);">
+                <h3>Message Received</h3>
+                <p>Your words have been planted. We will see you in 9 months.</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('echoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // In the future, this is where you'd hook up a service like Formspree or EmailJS
+            this.style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
+        });
+    </script>
+</body>
+</html>

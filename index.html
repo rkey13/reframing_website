@@ -28,6 +28,14 @@
                 <h3>The Inner Child Audio</h3>
                 <h4>Listen to recordings from our lovely comunity</h4>
                 <p>Find a moment of stillness. Listen to whispered affirmations designed to help you re-parent your younger self and soften old narratives.</p>
+                <div class="custom-audio-player">
+                    <button id="playBtn" class="play-toggle" aria-label="Play audio">▶</button>
+                    <div class="progress-wrapper" id="progressWrapper">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <audio id="affirmationAudio" src="your-audio-file.mp3" preload="metadata"></audio>
+                </div>
+                
                 <audio controls class="audio-player">
                 <source src="affirmation-track-1.mp3" type="audio/mpeg">
                 Your browser does not support the audio element.
@@ -40,6 +48,8 @@
                 <h3>The Inner Child Postbox</h3>
                 <h4>The 9-Month Echo</h4>
                 <p>Write a postcard to your future self. Share your reflections from the dust. We will hold your words and mail them to you nine months from now, like a seed blooming in another season.</p>
+                <p>Write a physical postcard to your future self. Visit our camp at Otherworld to sit at our writing desk and share your reflections from the dust. We will hold your words and mail them to you nine months from now, like a seed blooming in another season.</p>
+                <p class="camp-location"><strong>Find us:</strong> Look for the green lanterns near the deep playa edge.</p>
                 <button id="remindBtn">Set a Reflection Reminder</button>
             </div>
         </section>

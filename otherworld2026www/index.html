@@ -21,7 +21,6 @@
         button { background: transparent; color: var(--neon-blue); border: 1px solid var(--neon-blue); padding: 8px 15px; cursor: pointer; border-radius: 5px; }
         button.active { background: var(--neon-blue); color: var(--bg-color); font-weight: bold; }
         
-        /* New styling for the Jump button */
         #btn-now { border-color: var(--neon-yellow); color: var(--neon-yellow); }
         #btn-now:hover { background: var(--neon-yellow); color: var(--bg-color); }
 
@@ -30,7 +29,10 @@
         th { background-color: rgba(0, 229, 255, 0.1); color: var(--neon-blue); padding: 12px; text-align: left; border-bottom: 2px solid var(--neon-blue); text-transform: uppercase; font-size: 13px; }
         td { padding: 12px; border-bottom: 1px solid #1f2e1f; vertical-align: top; font-size: 14px; }
 
-        .past-event { opacity: 0.3; filter: grayscale(1); }
+        /* Subtle Past Event Styling */
+        .past-event { opacity: 0.6; filter: grayscale(0.5); }
+        .past-event td { color: #aaa; }
+
         .day-col { color: var(--neon-green); font-weight: bold; }
         .camp-col { color: var(--neon-pink); font-weight: bold; }
         .title-col { color: var(--neon-yellow); font-weight: bold; }
@@ -39,7 +41,7 @@
 </head>
 <body>
 
-    <h1 style="text-align: center;">This is a mirror of the Rogue Raccoon When/Where/What (Not to be confused with the official What/Where/When) this was last updated May 25 2026 @ 22:01</h1>
+    <h1 style="text-align: center;">This is a mirror of the Rogue Raccoon When/Where/What (Not to be confused with the official What/Where/When) this was last updated May 25 2026 @ 22:02</h1>
     
     <div class="controls">
         <button id="btn-time" class="active" onclick="sortData('time')">Sort by Date & Time</button>
@@ -71,22 +73,23 @@
         let allEvents = [];
         const tbody = document.getElementById('events-body');
 
-        const dateMap = { "Thursday": "2026-05-24", "Friday": "2026-05-25", "Saturday": "2026-05-26", "Sunday": "2026-05-27", "Monday": "2026-05-28" };
+        const dateMap = { "Thursday": "2026-06-04", "Friday": "2026-06-05", "Saturday": "2026-06-06", "Sunday": "2026-06-07", "Monday": "2026-06-08" };
         const dayOrder = { "Thursday": 1, "Friday": 2, "Saturday": 3, "Sunday": 4, "Monday": 5 };
 
-        function isPast(dayStr, endTime) {
+        function isPast(dayStr, endTimeStr) {
             const dateStr = dateMap[dayStr];
-            if (!dateStr) return false;
-            const eventEnd = new Date(`${dateStr}T${endTime}:00`);
+            if (!dateStr || !endTimeStr) return false;
+            // Parse HH:MM
+            const [h, m] = endTimeStr.split(':').map(Number);
+            const eventEnd = new Date(dateStr);
+            eventEnd.setHours(h, m, 0, 0);
             return eventEnd < new Date();
         }
 
-        // --- NEW: Jump to Now logic ---
         function jumpToNow() {
-            sortData('time'); // Ensure we are sorted chronologically
+            sortData('time');
             const now = new Date();
-            const todayStr = now.toISOString().split('T')[0];
-            const currentDay = Object.keys(dateMap).find(key => dateMap[key] === todayStr);
+            const todayStr = now.toLocaleDateString('en-CA'); // Returns YYYY-MM-DD
             const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
             const rows = tbody.querySelectorAll('tr');
@@ -94,24 +97,24 @@
 
             for (let i = 0; i < allEvents.length; i++) {
                 const e = allEvents[i];
+                const eventDate = dateMap[e.Day];
                 const [h, m] = (e['End Time'] || "00:00").split(':').map(Number);
                 const endMinutes = (h * 60) + m;
                 
-                // If the event day is today or in the future, AND it hasn't ended yet
-                if (dateMap[e.Day] >= todayStr) {
-                    if (dateMap[e.Day] > todayStr || endMinutes > nowMinutes) {
+                // Jump to first event that is either in the future day OR today but not finished
+                if (eventDate >= todayStr) {
+                    if (eventDate > todayStr || endMinutes > nowMinutes) {
                         rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        rows[i].style.backgroundColor = "rgba(0, 229, 255, 0.2)"; // Highlight briefly
+                        rows[i].style.backgroundColor = "rgba(0, 229, 255, 0.2)";
                         setTimeout(() => rows[i].style.backgroundColor = "", 2000);
                         found = true;
                         break;
                     }
                 }
             }
-            if (!found) alert("No upcoming events found for today!");
+            if (!found) alert("No upcoming events found!");
         }
 
-        // --- Existing Logic ---
         Papa.parse(CSV_FILE, {
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {

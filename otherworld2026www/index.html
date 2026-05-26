@@ -17,11 +17,20 @@
         }
         body { background-color: var(--bg-color); color: var(--text-color); font-family: sans-serif; margin: 0; padding: 20px; }
         
-        .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        button { background: transparent; color: var(--neon-blue); border: 1px solid var(--neon-blue); padding: 8px 15px; cursor: pointer; border-radius: 5px; }
-        button.active { background: var(--neon-blue); color: var(--bg-color); font-weight: bold; }
+        .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .tags-container { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; max-width: 1200px; margin-left: auto; margin-right: auto; padding: 10px; border-top: 1px dashed #223322; }
+        
+        button { background: transparent; color: var(--neon-blue); border: 1px solid var(--neon-blue); padding: 8px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; transition: all 0.2s; }
+        button.active { background: var(--neon-blue); color: var(--bg-color); }
+        
         #btn-now { border-color: var(--neon-yellow); color: var(--neon-yellow); }
         #btn-now:hover { background: var(--neon-yellow); color: var(--bg-color); }
+
+        /* Tag Button Styles */
+        .tag-btn { border-color: var(--neon-pink); color: var(--neon-pink); padding: 5px 12px; font-size: 12px; border-radius: 20px; }
+        .tag-btn.active { background: var(--neon-pink); color: var(--bg-color); box-shadow: 0 0 8px var(--neon-pink); }
+        .tag-btn.clear-btn { border-color: #888; color: #888; }
+        .tag-btn.clear-btn:hover { background: #444; color: #fff; }
 
         .table-container { width: 100%; max-width: 1400px; margin: auto; overflow-x: auto; background: var(--panel-bg); padding: 20px; border-radius: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
@@ -41,13 +50,26 @@
 
     <h1 style="text-align: center;">This is a mirror of the Rogue Raccoon When/Where/What (Not to be confused with the official What/Where/When) this should now update to match the source sheet after a refresh</h1>
     <h2 style="text-align: center;">https://docs.google.com/spreadsheets/d/e/2PACX-1vRIakaBzNVNdA3Y6v6ve54-CEKD22Tk4bREgvKI4noaPiqLqqc_YZwdwc2xXOMq0t3Ma6teLoa7p2Rf/pub?output=csv </h2>
-
     
     <div class="controls">
-        <button id="btn-time" class="active" onclick="sortData('time')">Sort by Date & Time</button>
-        <button id="btn-camp" onclick="sortData('camp')">Sort by Camp</button>
-        <button id="btn-hood" onclick="sortData('hood')">Sort by Location</button>
+        <button id="btn-time" class="active" onclick="setSort('time')">Sort by Date & Time</button>
+        <button id="btn-camp" onclick="setSort('camp')">Sort by Camp</button>
+        <button id="btn-hood" onclick="setSort('hood')">Sort by Location</button>
         <button id="btn-now" onclick="jumpToNow()">Jump to Now</button>
+    </div>
+
+    <div class="tags-container">
+        <button class="tag-btn" onclick="toggleTag(this, 'Workshop / Class')">Workshop / Class</button>
+        <button class="tag-btn" onclick="toggleTag(this, 'Interactive / Crafts')">Interactive / Crafts</button>
+        <button class="tag-btn" onclick="toggleTag(this, 'Food / Drink')">Food / Drink</button>
+        <button class="tag-btn" onclick="toggleTag(this, 'Performance / Show')">Performance / Show</button>
+        <button class="tag-btn" onclick="toggleTag(this, 'Wellness / Yoga')">Wellness / Yoga</button>
+        <button class="tag-btn" onclick="toggleTag(this, 'Refuge / Introspective')">Refuge / Introspective</button>
+        <button class="tag-btn" onclick="toggleTag(this, 'Music / Dance')">Music / Dance</button>
+        <button class="tag-btn" onclick="toggleTag(this, 'Game / Activity')">Game / Activity</button>
+        <button class="tag-btn" onclick="toggleTag(this, '19+')">19+</button>
+        <button class="tag-btn" onclick="toggleTag(this, 'Alcohol Involved')">Alcohol Involved</button>
+        <button class="tag-btn clear-btn" onclick="clearTags()">Clear Filters</button>
     </div>
 
     <div class="table-container">
@@ -69,10 +91,14 @@
     </div>
 
     <script>
-        // The live online URL
+        // Your updated live spreadsheet URL
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRIakaBzNVNdA3Y6v6ve54-CEKD22Tk4bREgvKI4noaPiqLqqc_YZwdwc2xXOMq0t3Ma6teLoa7p2Rf/pub?output=csv";
         
         let allEvents = [];
+        let visibleEvents = [];
+        let currentSort = 'time';
+        let activeTags = [];
+        
         const tbody = document.getElementById('events-body');
 
         const hoodColors = {
@@ -95,58 +121,91 @@
             return eventEnd < new Date();
         }
 
+        // Parse Live Data cleanly skipping original meta blocks
         Papa.parse(CSV_URL, {
             download: true,
             header: true,
             skipEmptyLines: true,
-            // Automatically remove the first 2 rows of the file before parsing
             beforeFirstChunk: function(chunk) {
                 var rows = chunk.split(/\r\n|\r|\n/);
                 rows.splice(0, 2); 
                 return rows.join("\n");
             },
             complete: function(results) {
+                // Completely sanitize keys and values from extra spaces
                 allEvents = results.data
-                    .filter(e => e.Day && e.Day.trim() !== "")
-                    .map(e => ({
-                        ...e,
-                        Day: (e.Day || "").trim(),
-                        Camp: (e.Camp || "").trim(),
-                        Neighbourhood: (e.Neighbourhood || "").trim()
-                    }));
-                sortData('time');
+                    .filter(e => e.Day && e.Day.trim() !== "" && e.Day !== "Day")
+                    .map(e => {
+                        const cleaned = {};
+                        for (let key in e) {
+                            cleaned[key.trim()] = (e[key] || "").trim();
+                        }
+                        return cleaned;
+                    });
+                updateDisplay();
             }
         });
 
-        function sortData(type) {
-            document.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+        // Handle active state changes for Sort Options
+        function setSort(type) {
+            currentSort = type;
+            document.querySelectorAll('.controls button').forEach(btn => btn.classList.remove('active'));
             if(type === 'time') document.getElementById('btn-time').classList.add('active');
             if(type === 'camp') document.getElementById('btn-camp').classList.add('active');
             if(type === 'hood') document.getElementById('btn-hood').classList.add('active');
+            updateDisplay();
+        }
 
-            const sorted = [...allEvents].sort((a, b) => {
-                if (type === 'time') {
+        // Handle Active filters array mappings 
+        function toggleTag(buttonElement, tagName) {
+            buttonElement.classList.toggle('active');
+            if (activeTags.includes(tagName)) {
+                activeTags = activeTags.filter(t => t !== tagName);
+            } else {
+                activeTags.push(tagName);
+            }
+            updateDisplay();
+        }
+
+        function clearTags() {
+            activeTags = [];
+            document.querySelectorAll('.tag-btn').forEach(btn => btn.classList.remove('active'));
+            updateDisplay();
+        }
+
+        // Unified rendering controller processing chain
+        function updateDisplay() {
+            // 1. Filter data matching ALL chosen flags
+            let processed = allEvents.filter(e => {
+                return activeTags.every(tag => e[tag] && e[tag].toUpperCase() === 'TRUE');
+            });
+
+            // 2. Sort current data group
+            processed.sort((a, b) => {
+                if (currentSort === 'time') {
                     const dayA = dayOrder[a.Day] || 99;
                     const dayB = dayOrder[b.Day] || 99;
                     if (dayA !== dayB) return dayA - dayB;
                     return (a['Start Time'] || "").localeCompare(b['Start Time'] || "");
                 } 
-                if (type === 'camp') return (a.Camp || "").localeCompare(b.Camp || "");
-                if (type === 'hood') return (a.Neighbourhood || "").localeCompare(b.Neighbourhood || "");
+                if (currentSort === 'camp') return (a.Camp || "").localeCompare(b.Camp || "");
+                if (currentSort === 'hood') return (a.Neighbourhood || "").localeCompare(b.Neighbourhood || "");
             });
-            renderTable(sorted);
+
+            visibleEvents = processed;
+            renderTable(processed);
         }
 
         function jumpToNow() {
-            sortData('time');
+            setSort('time'); // Enforce chronological view
             const now = new Date();
             const todayStr = now.toISOString().split('T')[0];
             const nowMinutes = now.getHours() * 60 + now.getMinutes();
             const rows = tbody.querySelectorAll('tr');
             let found = false;
 
-            for (let i = 0; i < allEvents.length; i++) {
-                const e = allEvents[i];
+            for (let i = 0; i < visibleEvents.length; i++) {
+                const e = visibleEvents[i];
                 const eventDate = dateMap[e.Day];
                 if (!eventDate) continue;
                 const [h, m] = (e['End Time'] || "00:00").split(':').map(Number);
@@ -161,11 +220,15 @@
                     }
                 }
             }
-            if (!found) alert("No current or upcoming events!");
+            if (!found) alert("No matching upcoming visible events found!");
         }
 
         function renderTable(data) {
             tbody.innerHTML = '';
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#888; padding:30px;">No events found matching those filter selections.</td></tr>`;
+                return;
+            }
             data.forEach(e => {
                 const tr = document.createElement('tr');
                 if (isPast(e.Day, e['End Time'])) tr.classList.add('past-event');

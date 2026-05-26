@@ -60,49 +60,37 @@
     </div>
 
     <script>
-    // URL CONFIGURATION
-    const REMOTE_CSV_URL = "PASTE_YOUR_PUBLISHED_CSV_LINK_HERE";
-    const LOCAL_CSV_FILE = "Otherworld_2026_Events.csv";
-    
+    // 1. Point directly to your local file
+    const CSV_FILE = "Otherworld_2026_Events.csv";
     const tbody = document.getElementById('events-body');
 
-    function showError(msg) {
-        tbody.innerHTML = `<tr><td colspan="6" style="color: red; text-align: center;">Error: ${msg}</td></tr>`;
-        console.error(msg);
-    }
-
-    function loadSchedule(url, isFallback = false) {
-        console.log("Attempting to load:", url);
+    // 2. Simplified loader
+    function loadSchedule() {
+        console.log("Loading local file: " + CSV_FILE);
         
-        const cacheBusterUrl = isFallback ? url : url + "?t=" + new Date().getTime();
-        
-        Papa.parse(cacheBusterUrl, {
+        Papa.parse(CSV_FILE, {
             download: true,
             header: true,
             skipEmptyLines: true,
             complete: function(results) {
                 if (results.errors.length > 0) {
-                    showError("CSV Parse Error: " + results.errors[0].message);
-                    return;
+                    console.error("Errors:", results.errors);
+                    tbody.innerHTML = '<tr><td colspan="6" style="color:red;">Parse Error: Check your CSV format.</td></tr>';
+                } else {
+                    renderTable(results.data);
                 }
-                if (!results.data || results.data.length === 0) {
-                    showError("No data found in file.");
-                    return;
-                }
-                renderTable(results.data);
             },
             error: function(err) {
-                showError("Network/Fetch error: " + err);
+                tbody.innerHTML = '<tr><td colspan="6" style="color:red;">File Error: Could not find "Otherworld_2026_Events.csv". Check filename capitalization.</td></tr>';
             }
         });
     }
 
+    // 3. Render function
     function renderTable(data) {
         tbody.innerHTML = '';
         data.forEach(e => {
-            // Ensure we at least have a Day to display
             if(!e['Day']) return; 
-
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="day-col">${e.Day || ''}</td>
@@ -116,8 +104,8 @@
         });
     }
 
-    // Start loading
-    loadSchedule(REMOTE_CSV_URL);
+    // 4. Start
+    loadSchedule();
 </script>
 </body>
 </html>

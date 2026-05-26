@@ -39,7 +39,7 @@
 </head>
 <body>
 
-    <h1 style="text-align: center;">This is a mirror of the Rogue Raccoon When/Where/What (Not to be confused with the official What/Where/When) this was last updated May 25 2026 @ 22:00</h1>
+    <h1 style="text-align: center;">This is a mirror of the Rogue Raccoon When/Where/What (Not to be confused with the official What/Where/When) this was last updated May 25 2026 @ 22:01</h1>
     
     <div class="controls">
         <button id="btn-time" class="active" onclick="sortData('time')">Sort by Date & Time</button>
@@ -92,6 +92,22 @@
             return eventEnd < new Date();
         }
 
+        // --- UPDATED LOADING LOGIC ---
+        Papa.parse(CSV_FILE, {
+            download: true, header: true, skipEmptyLines: true,
+            complete: function(results) {
+                // Filter out empty rows and TRIM all data to fix sorting bugs
+                allEvents = results.data.filter(e => e.Day && e.Day.trim() !== "" && e.Day !== "Day")
+                    .map(e => ({
+                        ...e,
+                        Day: (e.Day || "").trim(),
+                        Camp: (e.Camp || "").trim(),
+                        Neighbourhood: (e.Neighbourhood || "").trim()
+                    }));
+                sortData('time');
+            }
+        });
+
         function sortData(type) {
             document.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
             if(type === 'time') document.getElementById('btn-time').classList.add('active');
@@ -138,21 +154,12 @@
             if (!found) alert("No current or upcoming events!");
         }
 
-        Papa.parse(CSV_FILE, {
-            download: true, header: true, skipEmptyLines: true,
-            complete: function(results) {
-                allEvents = results.data.filter(e => e.Day && e.Day !== "Day");
-                sortData('time');
-            }
-        });
-
         function renderTable(data) {
             tbody.innerHTML = '';
             data.forEach(e => {
                 const tr = document.createElement('tr');
                 if (isPast(e.Day, e['End Time'])) tr.classList.add('past-event');
                 
-                // Safely lookup color (converting to uppercase to match list)
                 const hoodKey = (e.Neighbourhood || "").toUpperCase();
                 const hoodColor = hoodColors[hoodKey] || "#ffffff";
                 

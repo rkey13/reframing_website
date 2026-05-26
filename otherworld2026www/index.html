@@ -12,6 +12,7 @@
             --neon-blue: #00e5ff;
             --neon-pink: #ff00ff;
             --neon-green: #39ff14;
+            --neon-red: #ff3333;
             --neon-yellow: #fffb00;
             --panel-bg: #111a12;
         }
@@ -26,11 +27,27 @@
         #btn-now { border-color: var(--neon-yellow); color: var(--neon-yellow); }
         #btn-now:hover { background: var(--neon-yellow); color: var(--bg-color); }
 
-        /* Tag Button Styles */
-        .tag-btn { border-color: var(--neon-pink); color: var(--neon-pink); padding: 5px 12px; font-size: 12px; border-radius: 20px; }
-        .tag-btn.active { background: var(--neon-pink); color: var(--bg-color); box-shadow: 0 0 8px var(--neon-pink); }
-        .tag-btn.clear-btn { border-color: #888; color: #888; }
-        .tag-btn.clear-btn:hover { background: #444; color: #fff; }
+        /* 3-State Tri-Toggle Button Styles */
+        .tag-btn { border-color: #444; color: #888; padding: 5px 12px; font-size: 12px; border-radius: 20px; transition: all 0.2s ease-in-out; }
+        
+        /* State: Must Include (Neon Green) */
+        .tag-btn.include { 
+            border-color: var(--neon-green); 
+            color: var(--neon-green); 
+            box-shadow: 0 0 10px var(--neon-green); 
+            background: rgba(57, 255, 20, 0.05); 
+        }
+        
+        /* State: Must NOT Include (Neon Red) */
+        .tag-btn.exclude { 
+            border-color: var(--neon-red); 
+            color: var(--neon-red); 
+            box-shadow: 0 0 10px var(--neon-red); 
+            background: rgba(255, 51, 51, 0.05); 
+        }
+        
+        .tag-btn.clear-btn { border-color: #555; color: #aaa; }
+        .tag-btn.clear-btn:hover { background: #333; color: #fff; }
 
         .table-container { width: 100%; max-width: 1400px; margin: auto; overflow-x: auto; background: var(--panel-bg); padding: 20px; border-radius: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
@@ -59,16 +76,16 @@
     </div>
 
     <div class="tags-container">
-        <button class="tag-btn" onclick="toggleTag(this, 'Workshop / Class')">Workshop / Class</button>
-        <button class="tag-btn" onclick="toggleTag(this, 'Interactive / Crafts')">Interactive / Crafts</button>
-        <button class="tag-btn" onclick="toggleTag(this, 'Food / Drink')">Food / Drink</button>
-        <button class="tag-btn" onclick="toggleTag(this, 'Performance / Show')">Performance / Show</button>
-        <button class="tag-btn" onclick="toggleTag(this, 'Wellness / Yoga')">Wellness / Yoga</button>
-        <button class="tag-btn" onclick="toggleTag(this, 'Refuge / Introspective')">Refuge / Introspective</button>
-        <button class="tag-btn" onclick="toggleTag(this, 'Music / Dance')">Music / Dance</button>
-        <button class="tag-btn" onclick="toggleTag(this, 'Game / Activity')">Game / Activity</button>
-        <button class="tag-btn" onclick="toggleTag(this, '19+')">19+</button>
-        <button class="tag-btn" onclick="toggleTag(this, 'Alcohol Involved')">Alcohol Involved</button>
+        <button class="tag-btn" onclick="cycleTag(this, 'Workshop / Class')">Workshop / Class</button>
+        <button class="tag-btn" onclick="cycleTag(this, 'Interactive / Crafts')">Interactive / Crafts</button>
+        <button class="tag-btn" onclick="cycleTag(this, 'Food / Drink')">Food / Drink</button>
+        <button class="tag-btn" onclick="cycleTag(this, 'Performance / Show')">Performance / Show</button>
+        <button class="tag-btn" onclick="cycleTag(this, 'Wellness / Yoga')">Wellness / Yoga</button>
+        <button class="tag-btn" onclick="cycleTag(this, 'Refuge / Introspective')">Refuge / Introspective</button>
+        <button class="tag-btn" onclick="cycleTag(this, 'Music / Dance')">Music / Dance</button>
+        <button class="tag-btn" onclick="cycleTag(this, 'Game / Activity')">Game / Activity</button>
+        <button class="tag-btn" onclick="cycleTag(this, '19+')">19+</button>
+        <button class="tag-btn" onclick="cycleTag(this, 'Alcohol Involved')">Alcohol Involved</button>
         <button class="tag-btn clear-btn" onclick="clearTags()">Clear Filters</button>
     </div>
 
@@ -91,13 +108,18 @@
     </div>
 
     <script>
-        // Your updated live spreadsheet URL
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRIakaBzNVNdA3Y6v6ve54-CEKD22Tk4bREgvKI4noaPiqLqqc_YZwdwc2xXOMq0t3Ma6teLoa7p2Rf/pub?output=csv";
         
         let allEvents = [];
         let visibleEvents = [];
         let currentSort = 'time';
-        let activeTags = [];
+        
+        // Track states: 0 = Neutral, 1 = Must Include, -1 = Must NOT Include
+        let tagStates = {
+            'Workshop / Class': 0, 'Interactive / Crafts': 0, 'Food / Drink': 0,
+            'Performance / Show': 0, 'Wellness / Yoga': 0, 'Refuge / Introspective': 0,
+            'Music / Dance': 0, 'Game / Activity': 0, '19+': 0, 'Alcohol Involved': 0
+        };
         
         const tbody = document.getElementById('events-body');
 
@@ -121,7 +143,6 @@
             return eventEnd < new Date();
         }
 
-        // Parse Live Data cleanly skipping original meta blocks
         Papa.parse(CSV_URL, {
             download: true,
             header: true,
@@ -132,7 +153,6 @@
                 return rows.join("\n");
             },
             complete: function(results) {
-                // Completely sanitize keys and values from extra spaces
                 allEvents = results.data
                     .filter(e => e.Day && e.Day.trim() !== "" && e.Day !== "Day")
                     .map(e => {
@@ -146,7 +166,6 @@
             }
         });
 
-        // Handle active state changes for Sort Options
         function setSort(type) {
             currentSort = type;
             document.querySelectorAll('.controls button').forEach(btn => btn.classList.remove('active'));
@@ -156,31 +175,49 @@
             updateDisplay();
         }
 
-        // Handle Active filters array mappings 
-        function toggleTag(buttonElement, tagName) {
-            buttonElement.classList.toggle('active');
-            if (activeTags.includes(tagName)) {
-                activeTags = activeTags.filter(t => t !== tagName);
+        // Cycle tags through states: 0 (Neutral) -> 1 (Include) -> -1 (Exclude) -> 0
+        function cycleTag(btn, tagName) {
+            let currentState = tagStates[tagName];
+            
+            if (currentState === 0) {
+                tagStates[tagName] = 1;
+                btn.className = "tag-btn include";
+            } else if (currentState === 1) {
+                tagStates[tagName] = -1;
+                btn.className = "tag-btn exclude";
             } else {
-                activeTags.push(tagName);
+                tagStates[tagName] = 0;
+                btn.className = "tag-btn";
             }
             updateDisplay();
         }
 
         function clearTags() {
-            activeTags = [];
-            document.querySelectorAll('.tag-btn').forEach(btn => btn.classList.remove('active'));
+            for (let tag in tagStates) {
+                tagStates[tag] = 0;
+            }
+            document.querySelectorAll('.tags-container .tag-btn').forEach(btn => {
+                if (!btn.classList.contains('clear-btn')) {
+                    btn.className = "tag-btn";
+                }
+            });
             updateDisplay();
         }
 
-        // Unified rendering controller processing chain
         function updateDisplay() {
-            // 1. Filter data matching ALL chosen flags
+            // Evaluates both inclusion matrix laws and explicit exclusion bounds
             let processed = allEvents.filter(e => {
-                return activeTags.every(tag => e[tag] && e[tag].toUpperCase() === 'TRUE');
+                for (let tag in tagStates) {
+                    const state = tagStates[tag];
+                    const isTrue = e[tag] && e[tag].toUpperCase() === 'TRUE';
+                    
+                    if (state === 1 && !isTrue) return false;  // Must include, but matches false -> Hide
+                    if (state === -1 && isTrue) return false; // Must NOT include, but matches true -> Hide
+                }
+                return true;
             });
 
-            // 2. Sort current data group
+            // Sorting Engine rules 
             processed.sort((a, b) => {
                 if (currentSort === 'time') {
                     const dayA = dayOrder[a.Day] || 99;
@@ -197,7 +234,7 @@
         }
 
         function jumpToNow() {
-            setSort('time'); // Enforce chronological view
+            setSort('time'); 
             const now = new Date();
             const todayStr = now.toISOString().split('T')[0];
             const nowMinutes = now.getHours() * 60 + now.getMinutes();

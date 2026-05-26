@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Otherworld 2026 - What, Where, When</title>
+    <title>Otherworld 2026 - Schedule</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         :root {
@@ -16,214 +16,88 @@
             --panel-bg: #111a12;
         }
         
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-image: radial-gradient(circle at center, #0a1c0a 0%, #050b05 100%);
-            min-height: 100vh;
+        body { background-color: var(--bg-color); color: var(--text-color); font-family: sans-serif; margin: 0; padding: 20px; }
+
+        .table-container { 
+            width: 100%; 
+            max-width: 1400px; 
+            margin: auto; 
+            overflow-x: auto; 
+            background: var(--panel-bg); 
+            padding: 20px; 
+            border-radius: 10px; 
         }
 
-        header {
-            text-align: center;
-            padding: 40px 20px;
-            background: rgba(17, 26, 18, 0.8);
-            border-bottom: 4px solid var(--neon-blue);
-            box-shadow: 0 4px 15px rgba(0, 229, 255, 0.2);
-        }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { background-color: rgba(0, 229, 255, 0.1); color: var(--neon-blue); padding: 12px; text-align: left; border-bottom: 2px solid var(--neon-blue); text-transform: uppercase; font-size: 13px; }
+        td { padding: 12px; border-bottom: 1px solid #1f2e1f; vertical-align: top; font-size: 14px; }
 
-        h1 {
-            color: var(--neon-blue);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
-            margin-top: 20px;
-        }
-
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin: 30px 0;
-            flex-wrap: wrap;
-        }
-
-        button {
-            background-color: transparent;
-            color: var(--neon-green);
-            border: 2px solid var(--neon-green);
-            padding: 12px 25px;
-            font-size: 16px;
-            cursor: pointer;
-            font-weight: bold;
-            border-radius: 8px;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 10px rgba(57, 255, 20, 0.2);
-        }
-
-        button:hover, button.active {
-            background-color: var(--neon-green);
-            color: var(--bg-color);
-            box-shadow: 0 0 20px rgba(57, 255, 20, 0.6);
-        }
-
-        button.camp-btn {
-            color: var(--neon-pink);
-            border-color: var(--neon-pink);
-            box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);
-        }
-
-        button.camp-btn:hover, button.camp-btn.active {
-            background-color: var(--neon-pink);
-            color: var(--bg-color);
-            box-shadow: 0 0 20px rgba(255, 0, 255, 0.6);
-        }
-
-        .table-container {
-            width: 95%;
-            max-width: 1400px;
-            margin: auto;
-            overflow-x: auto;
-            background: var(--panel-bg);
-            border-radius: 10px;
-            padding: 20px;
-            box-sizing: border-box;
-            border: 1px solid #1f2e1f;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            margin-bottom: 50px;
-        }
-
-        table { width: 100%; border-collapse: collapse; }
-        th { background-color: rgba(0, 229, 255, 0.1); color: var(--neon-blue); padding: 15px; text-align: left; border-bottom: 2px solid var(--neon-blue); text-transform: uppercase; }
-        td { padding: 15px; border-bottom: 1px solid #1f2e1f; vertical-align: top; }
-        tr:hover { background-color: rgba(255, 255, 255, 0.05); }
-
-        .day-col { color: var(--neon-green); font-weight: bold; }
-        .time-col { color: #a0eba0; }
+        .day-col { color: var(--neon-green); font-weight: bold; white-space: nowrap; }
+        .camp-col { color: var(--neon-pink); font-weight: bold; }
         .title-col { color: var(--neon-yellow); font-weight: bold; }
-        .camp-col { color: var(--neon-pink); text-transform: uppercase; }
+        .hood-col { color: #888; font-style: italic; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Otherworld 2026</h1>
-        <p>What - Where - When Guide</p>
-    </header>
-
-    <div class="controls">
-        <button id="btn-time" class="active" onclick="sortByDefault()">Sort by Day & Time</button>
-        <button id="btn-camp" class="camp-btn" onclick="sortByCamp()">Sort by Camp</button>
-    </div>
-
+    <h1>Otherworld 2026</h1>
     <div class="table-container">
         <table>
             <thead>
                 <tr>
                     <th>Day</th>
                     <th>Time</th>
-                    <th>Event</th>
                     <th>Camp</th>
+                    <th>Neighbourhood</th>
+                    <th>Event</th>
                     <th>Description</th>
                 </tr>
             </thead>
             <tbody id="events-body">
-                <tr><td colspan="5">Loading schedule...</td></tr>
+                <tr><td colspan="6">Loading schedule...</td></tr>
             </tbody>
         </table>
     </div>
 
     <script>
-        // --- CONFIGURATION ---
-        // REPLACE THE URL BELOW WITH YOUR "PUBLISH TO WEB" CSV LINK
         const REMOTE_CSV_URL = "PASTE_YOUR_PUBLISHED_CSV_LINK_HERE";
         const LOCAL_CSV_FILE = "Otherworld_2026_Events.csv";
         
-        let allEvents = [];
         const tbody = document.getElementById('events-body');
 
-        // --- DATA LOADING ---
         function loadSchedule(url, isFallback = false) {
-            // Add cache buster to URL to ensure we get the latest Google Sheet data
             const cacheBusterUrl = isFallback ? url : url + "?t=" + new Date().getTime();
             
             Papa.parse(cacheBusterUrl, {
                 download: true,
                 header: true,
+                skipEmptyLines: true,
                 complete: function(results) {
-                    if (results.data && results.data.length > 0) {
-                        allEvents = results.data.filter(row => row.Day); // Filter empty rows
-                        renderTable(allEvents);
-                    } else {
-                        triggerFallback(isFallback);
-                    }
-                },
-                error: function(err) {
-                    console.error("Error loading:", err);
-                    triggerFallback(isFallback);
+                    renderTable(results.data);
                 }
             });
-        }
-
-        function triggerFallback(isFallback) {
-            if (!isFallback) {
-                console.log("Remote failed. Switching to local CSV...");
-                loadSchedule(LOCAL_CSV_FILE, true);
-            } else {
-                tbody.innerHTML = '<tr><td colspan="5" style="color:red;">Error: Could not load data.</td></tr>';
-            }
-        }
-
-        // --- SORTING LOGIC ---
-        const dayOrder = { "Thursday": 1, "Friday": 2, "Saturday": 3, "Sunday": 4, "Monday": 5 };
-
-        function getDayValue(dayStr) {
-            for (let key in dayOrder) { if (dayStr.includes(key)) return dayOrder[key]; }
-            return 99;
         }
 
         function renderTable(data) {
             tbody.innerHTML = '';
             data.forEach(e => {
+                // Check if row has data
+                if(!e['Day']) return; 
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="day-col">${e.Day || ''}</td>
                     <td class="time-col">${e['Start Time'] || ''} - ${e['End Time'] || ''}</td>
-                    <td class="title-col">${e['Event Name'] || ''}</td>
                     <td class="camp-col">${e.Camp || ''}</td>
-                    <td>${e['Event Description'] || ''}</td>
+                    <td class="hood-col">${e.Neighbourhood || ''}</td>
+                    <td class="title-col">${e['Event Name'] || ''}</td>
+                    <td>${e['Description of Event'] || ''}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function sortByDefault() {
-            document.getElementById('btn-time').classList.add('active');
-            document.getElementById('btn-camp').classList.remove('active');
-            const sorted = [...allEvents].sort((a, b) => {
-                const dayA = getDayValue(a.Day);
-                const dayB = getDayValue(b.Day);
-                if (dayA !== dayB) return dayA - dayB;
-                return (a['Start Time'] || "").localeCompare(b['Start Time'] || "");
-            });
-            renderTable(sorted);
-        }
-
-        function sortByCamp() {
-            document.getElementById('btn-camp').classList.add('active');
-            document.getElementById('btn-time').classList.remove('active');
-            const sorted = [...allEvents].sort((a, b) => {
-                const campCmp = (a.Camp || "").localeCompare(b.Camp || "");
-                if (campCmp !== 0) return campCmp;
-                return getDayValue(a.Day) - getDayValue(b.Day);
-            });
-            renderTable(sorted);
-        }
-
-        // Initial Load
+        // Load data
         loadSchedule(REMOTE_CSV_URL);
     </script>
 </body>

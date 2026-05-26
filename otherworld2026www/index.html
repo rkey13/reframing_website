@@ -20,7 +20,6 @@
         .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         button { background: transparent; color: var(--neon-blue); border: 1px solid var(--neon-blue); padding: 8px 15px; cursor: pointer; border-radius: 5px; }
         button.active { background: var(--neon-blue); color: var(--bg-color); font-weight: bold; }
-        
         #btn-now { border-color: var(--neon-yellow); color: var(--neon-yellow); }
         #btn-now:hover { background: var(--neon-yellow); color: var(--bg-color); }
 
@@ -29,19 +28,18 @@
         th { background-color: rgba(0, 229, 255, 0.1); color: var(--neon-blue); padding: 12px; text-align: left; border-bottom: 2px solid var(--neon-blue); text-transform: uppercase; font-size: 13px; }
         td { padding: 12px; border-bottom: 1px solid #1f2e1f; vertical-align: top; font-size: 14px; }
 
-        /* Subtle Past Event Styling */
-        .past-event { opacity: 0.6; filter: grayscale(0.5); }
+        .past-event { opacity: 0.45; filter: grayscale(0.2); }
         .past-event td { color: #aaa; }
 
         .day-col { color: var(--neon-green); font-weight: bold; }
         .camp-col { color: var(--neon-pink); font-weight: bold; }
         .title-col { color: var(--neon-yellow); font-weight: bold; }
-        .hood-col { color: #888; }
+        .hood-cell { font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h1 style="text-align: center;">This is a mirror of the Rogue Raccoon When/Where/What (Not to be confused with the official What/Where/When) this was last updated May 25 2026 @ 22:03</h1>
+    <h1 style="text-align: center;">This is a mirror of the Rogue Raccoon When/Where/What (Not to be confused with the official What/Where/When) this was last updated May 25 2026 @ 22:00</h1>
     
     <div class="controls">
         <button id="btn-time" class="active" onclick="sortData('time')">Sort by Date & Time</button>
@@ -73,55 +71,26 @@
         let allEvents = [];
         const tbody = document.getElementById('events-body');
 
+        // Neighborhood Color Map
+        const hoodColors = {
+            "SPARK": "#FF9933", "ASHLAND": "#A9A9A9", "BLACK ROCK": "#696969",
+            "BROOD": "#800080", "COLLECTION": "#FF69B4", "CONDENSATION": "#00FFFF",
+            "DOACRACY": "#FFFF00", "EVAPORATION": "#ADD8E6", "KINDLE": "#FF00FF",
+            "MIDDLE EARTH": "#8B4513", "MOOP": "#39FF14", "PRECIPITATION": "#4169E1",
+            "ROAMING": "#D3D3D3", "SANDSTORM": "#F4A460", "SCORCH": "#FF4500",
+            "SIDEQUEST": "#9370DB", "SMOLDER": "#FF4444", "SOMEWHERE": "#FFFFFF",
+            "TINKER": "#7FFFD4", "YES.. AND?": "#00FF7F"
+        };
+
         const dateMap = { "Thursday": "2026-06-04", "Friday": "2026-06-05", "Saturday": "2026-06-06", "Sunday": "2026-06-07", "Monday": "2026-06-08" };
         const dayOrder = { "Thursday": 1, "Friday": 2, "Saturday": 3, "Sunday": 4, "Monday": 5 };
 
         function isPast(dayStr, endTimeStr) {
             const dateStr = dateMap[dayStr];
             if (!dateStr || !endTimeStr) return false;
-            // Parse HH:MM
-            const [h, m] = endTimeStr.split(':').map(Number);
-            const eventEnd = new Date(dateStr);
-            eventEnd.setHours(h, m, 0, 0);
+            const eventEnd = new Date(`${dateStr}T${endTimeStr}:00`);
             return eventEnd < new Date();
         }
-
-        function jumpToNow() {
-            sortData('time');
-            const now = new Date();
-            const todayStr = now.toLocaleDateString('en-CA'); // Returns YYYY-MM-DD
-            const nowMinutes = now.getHours() * 60 + now.getMinutes();
-
-            const rows = tbody.querySelectorAll('tr');
-            let found = false;
-
-            for (let i = 0; i < allEvents.length; i++) {
-                const e = allEvents[i];
-                const eventDate = dateMap[e.Day];
-                const [h, m] = (e['End Time'] || "00:00").split(':').map(Number);
-                const endMinutes = (h * 60) + m;
-                
-                // Jump to first event that is either in the future day OR today but not finished
-                if (eventDate >= todayStr) {
-                    if (eventDate > todayStr || endMinutes > nowMinutes) {
-                        rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        rows[i].style.backgroundColor = "rgba(0, 229, 255, 0.2)";
-                        setTimeout(() => rows[i].style.backgroundColor = "", 2000);
-                        found = true;
-                        break;
-                    }
-                }
-            }
-            if (!found) alert("No upcoming events found!");
-        }
-
-        Papa.parse(CSV_FILE, {
-            download: true, header: true, skipEmptyLines: true,
-            complete: function(results) {
-                allEvents = results.data.filter(e => e.Day);
-                sortData('time');
-            }
-        });
 
         function sortData(type) {
             document.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
@@ -142,12 +111,59 @@
             renderTable(sorted);
         }
 
+        function jumpToNow() {
+            sortData('time');
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            const nowMinutes = now.getHours() * 60 + now.getMinutes();
+            const rows = tbody.querySelectorAll('tr');
+            let found = false;
+
+            for (let i = 0; i < allEvents.length; i++) {
+                const e = allEvents[i];
+                const eventDate = dateMap[e.Day];
+                if (!eventDate) continue;
+                const [h, m] = (e['End Time'] || "00:00").split(':').map(Number);
+                const endMinutes = (h * 60) + m;
+                if (eventDate >= todayStr) {
+                    if (eventDate > todayStr || endMinutes > nowMinutes) {
+                        rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        rows[i].style.backgroundColor = "rgba(0, 229, 255, 0.2)";
+                        setTimeout(() => rows[i].style.backgroundColor = "", 2000);
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (!found) alert("No current or upcoming events!");
+        }
+
+        Papa.parse(CSV_FILE, {
+            download: true, header: true, skipEmptyLines: true,
+            complete: function(results) {
+                allEvents = results.data.filter(e => e.Day && e.Day !== "Day");
+                sortData('time');
+            }
+        });
+
         function renderTable(data) {
             tbody.innerHTML = '';
             data.forEach(e => {
                 const tr = document.createElement('tr');
                 if (isPast(e.Day, e['End Time'])) tr.classList.add('past-event');
-                tr.innerHTML = `<td class="day-col">${e.Day || ''}</td><td class="time-col">${e['Start Time'] || ''} - ${e['End Time'] || ''}</td><td class="camp-col">${e.Camp || ''}</td><td class="hood-col">${e.Neighbourhood || ''}</td><td class="title-col">${e['Event Name'] || ''}</td><td>${e['Description of Event'] || ''}</td>`;
+                
+                // Safely lookup color (converting to uppercase to match list)
+                const hoodKey = (e.Neighbourhood || "").toUpperCase();
+                const hoodColor = hoodColors[hoodKey] || "#ffffff";
+                
+                tr.innerHTML = `
+                    <td class="day-col">${e.Day}</td>
+                    <td>${e['Start Time']} - ${e['End Time']}</td>
+                    <td class="camp-col">${e.Camp}</td>
+                    <td class="hood-cell" style="color: ${hoodColor}">${e.Neighbourhood}</td>
+                    <td class="title-col">${e['Event Name']}</td>
+                    <td>${e['Description of Event']}</td>
+                `;
                 tbody.appendChild(tr);
             });
         }

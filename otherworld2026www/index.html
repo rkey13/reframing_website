@@ -15,32 +15,33 @@
             --neon-yellow: #fffb00;
             --panel-bg: #111a12;
         }
-        
         body { background-color: var(--bg-color); color: var(--text-color); font-family: sans-serif; margin: 0; padding: 20px; }
+        
+        .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        button { background: transparent; color: var(--neon-blue); border: 1px solid var(--neon-blue); padding: 8px 15px; cursor: pointer; border-radius: 5px; }
+        button.active { background: var(--neon-blue); color: var(--bg-color); font-weight: bold; }
 
-        .table-container { 
-            width: 100%; 
-            max-width: 1400px; 
-            margin: auto; 
-            overflow-x: auto; 
-            background: var(--panel-bg); 
-            padding: 20px; 
-            border-radius: 10px; 
-        }
-
+        .table-container { width: 100%; max-width: 1400px; margin: auto; overflow-x: auto; background: var(--panel-bg); padding: 20px; border-radius: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th { background-color: rgba(0, 229, 255, 0.1); color: var(--neon-blue); padding: 12px; text-align: left; border-bottom: 2px solid var(--neon-blue); text-transform: uppercase; font-size: 13px; }
         td { padding: 12px; border-bottom: 1px solid #1f2e1f; vertical-align: top; font-size: 14px; }
 
-        .day-col { color: var(--neon-green); font-weight: bold; white-space: nowrap; }
+        .day-col { color: var(--neon-green); font-weight: bold; }
         .camp-col { color: var(--neon-pink); font-weight: bold; }
         .title-col { color: var(--neon-yellow); font-weight: bold; }
-        .hood-col { color: #888; font-style: italic; }
+        .hood-col { color: #888; }
     </style>
 </head>
 <body>
 
-    <h1>Otherworld 2026</h1>
+    <h1 style="text-align: center;">Otherworld 2026 Schedule</h1>
+    
+    <div class="controls">
+        <button id="btn-time" class="active" onclick="sortData('time')">Sort by Date & Time</button>
+        <button id="btn-camp" onclick="sortData('camp')">Sort by Camp</button>
+        <button id="btn-hood" onclick="sortData('hood')">Sort by Location</button>
+    </div>
+
     <div class="table-container">
         <table>
             <thead>
@@ -54,58 +55,69 @@
                 </tr>
             </thead>
             <tbody id="events-body">
-                <tr><td colspan="6">Loading schedule...</td></tr>
+                <tr><td colspan="6">Loading...</td></tr>
             </tbody>
         </table>
     </div>
 
     <script>
-    // 1. Point directly to your local file
-    const CSV_FILE = "Otherworld_2026_Events.csv";
-    const tbody = document.getElementById('events-body');
+        const CSV_FILE = "Otherworld_2026_Events.csv";
+        let allEvents = [];
+        const tbody = document.getElementById('events-body');
 
-    // 2. Simplified loader
-    function loadSchedule() {
-        console.log("Loading local file: " + CSV_FILE);
-        
+        // Load CSV
         Papa.parse(CSV_FILE, {
             download: true,
             header: true,
             skipEmptyLines: true,
             complete: function(results) {
-                if (results.errors.length > 0) {
-                    console.error("Errors:", results.errors);
-                    tbody.innerHTML = '<tr><td colspan="6" style="color:red;">Parse Error: Check your CSV format.</td></tr>';
-                } else {
-                    renderTable(results.data);
-                }
-            },
-            error: function(err) {
-                tbody.innerHTML = '<tr><td colspan="6" style="color:red;">File Error: Could not find "Otherworld_2026_Events.csv". Check filename capitalization.</td></tr>';
+                allEvents = results.data.filter(e => e.Day);
+                sortData('time'); // Default sort
             }
         });
-    }
 
-    // 3. Render function
-    function renderTable(data) {
-        tbody.innerHTML = '';
-        data.forEach(e => {
-            if(!e['Day']) return; 
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="day-col">${e.Day || ''}</td>
-                <td class="time-col">${e['Start Time'] || ''} - ${e['End Time'] || ''}</td>
-                <td class="camp-col">${e.Camp || ''}</td>
-                <td class="hood-col">${e.Neighbourhood || ''}</td>
-                <td class="title-col">${e['Event Name'] || ''}</td>
-                <td>${e['Description of Event'] || ''}</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
+        // Day Order Helper
+        const dayOrder = { "Thursday": 1, "Friday": 2, "Saturday": 3, "Sunday": 4, "Monday": 5 };
 
-    // 4. Start
-    loadSchedule();
-</script>
+        function sortData(type) {
+            // Update button styles
+            document.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            if(type === 'time') document.getElementById('btn-time').classList.add('active');
+            if(type === 'camp') document.getElementById('btn-camp').classList.add('active');
+            if(type === 'hood') document.getElementById('btn-hood').classList.add('active');
+
+            const sorted = [...allEvents].sort((a, b) => {
+                if (type === 'time') {
+                    const dayA = dayOrder[a.Day] || 99;
+                    const dayB = dayOrder[b.Day] || 99;
+                    if (dayA !== dayB) return dayA - dayB;
+                    return (a['Start Time'] || "").localeCompare(b['Start Time'] || "");
+                } 
+                if (type === 'camp') {
+                    return (a.Camp || "").localeCompare(b.Camp || "");
+                }
+                if (type === 'hood') {
+                    return (a.Neighbourhood || "").localeCompare(b.Neighbourhood || "");
+                }
+            });
+            renderTable(sorted);
+        }
+
+        function renderTable(data) {
+            tbody.innerHTML = '';
+            data.forEach(e => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="day-col">${e.Day || ''}</td>
+                    <td class="time-col">${e['Start Time'] || ''} - ${e['End Time'] || ''}</td>
+                    <td class="camp-col">${e.Camp || ''}</td>
+                    <td class="hood-col">${e.Neighbourhood || ''}</td>
+                    <td class="title-col">${e['Event Name'] || ''}</td>
+                    <td>${e['Description of Event'] || ''}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
 </body>
 </html>

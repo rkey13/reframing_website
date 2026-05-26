@@ -39,7 +39,7 @@
 </head>
 <body>
 
-    <h1 style="text-align: center;">This is a mirror of the Rogue Raccoon When/Where/What (Not to be confused with the official What/Where/When) this was last updated May 25 2026 @ 22:01</h1>
+    <h1 style="text-align: center;">This is a mirror of the Rogue Raccoon When/Where/What (Not to be confused with the official What/Where/When) this was last updated May 25 2026 @ 23:00</h1>
     
     <div class="controls">
         <button id="btn-time" class="active" onclick="sortData('time')">Sort by Date & Time</button>
@@ -61,17 +61,18 @@
                 </tr>
             </thead>
             <tbody id="events-body">
-                <tr><td colspan="6">Loading...</td></tr>
+                <tr><td colspan="6">Loading live schedule...</td></tr>
             </tbody>
         </table>
     </div>
 
     <script>
-        const CSV_FILE = "Otherworld_2026_Events.csv";
+        // The live online URL
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRAdcH57Nwtwn2T99GkSyqsXHcUqtaGaX4AlnP1Iqb-s0Ipp7FHm6Ubn6U8oFIJhlNWFrxZNoreBF1S/pub?output=csv";
+        
         let allEvents = [];
         const tbody = document.getElementById('events-body');
 
-        // Neighborhood Color Map
         const hoodColors = {
             "SPARK": "#FF9933", "ASHLAND": "#A9A9A9", "BLACK ROCK": "#696969",
             "BROOD": "#800080", "COLLECTION": "#FF69B4", "CONDENSATION": "#00FFFF",
@@ -92,12 +93,19 @@
             return eventEnd < new Date();
         }
 
-        // --- UPDATED LOADING LOGIC ---
-        Papa.parse(CSV_FILE, {
-            download: true, header: true, skipEmptyLines: true,
+        Papa.parse(CSV_URL, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            // Automatically remove the first 2 rows of the file before parsing
+            beforeFirstChunk: function(chunk) {
+                var rows = chunk.split(/\r\n|\r|\n/);
+                rows.splice(0, 2); 
+                return rows.join("\n");
+            },
             complete: function(results) {
-                // Filter out empty rows and TRIM all data to fix sorting bugs
-                allEvents = results.data.filter(e => e.Day && e.Day.trim() !== "" && e.Day !== "Day")
+                allEvents = results.data
+                    .filter(e => e.Day && e.Day.trim() !== "")
                     .map(e => ({
                         ...e,
                         Day: (e.Day || "").trim(),

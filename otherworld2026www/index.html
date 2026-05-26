@@ -20,16 +20,17 @@
         .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         button { background: transparent; color: var(--neon-blue); border: 1px solid var(--neon-blue); padding: 8px 15px; cursor: pointer; border-radius: 5px; }
         button.active { background: var(--neon-blue); color: var(--bg-color); font-weight: bold; }
+        
+        /* New styling for the Jump button */
+        #btn-now { border-color: var(--neon-yellow); color: var(--neon-yellow); }
+        #btn-now:hover { background: var(--neon-yellow); color: var(--bg-color); }
 
         .table-container { width: 100%; max-width: 1400px; margin: auto; overflow-x: auto; background: var(--panel-bg); padding: 20px; border-radius: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th { background-color: rgba(0, 229, 255, 0.1); color: var(--neon-blue); padding: 12px; text-align: left; border-bottom: 2px solid var(--neon-blue); text-transform: uppercase; font-size: 13px; }
         td { padding: 12px; border-bottom: 1px solid #1f2e1f; vertical-align: top; font-size: 14px; }
 
-        /* Greying out style */
         .past-event { opacity: 0.3; filter: grayscale(1); }
-        .past-event td { color: #666; }
-
         .day-col { color: var(--neon-green); font-weight: bold; }
         .camp-col { color: var(--neon-pink); font-weight: bold; }
         .title-col { color: var(--neon-yellow); font-weight: bold; }
@@ -38,12 +39,13 @@
 </head>
 <body>
 
-    <h1 style="text-align: center;">This is a mirror of the Rogue Raccoon When/Where/What (Not to be confused with the official What/Where/When) this was last updated May 25 2026 @ 22:00 </h1>
+    <h1 style="text-align: center;">This is a mirror of the Rogue Raccoon When/Where/What (Not to be confused with the official What/Where/When) this was last updated May 25 2026 @ 22:00</h1>
     
     <div class="controls">
         <button id="btn-time" class="active" onclick="sortData('time')">Sort by Date & Time</button>
         <button id="btn-camp" onclick="sortData('camp')">Sort by Camp</button>
         <button id="btn-hood" onclick="sortData('hood')">Sort by Location</button>
+        <button id="btn-now" onclick="jumpToNow()">Jump to Now</button>
     </div>
 
     <div class="table-container">
@@ -69,35 +71,49 @@
         let allEvents = [];
         const tbody = document.getElementById('events-body');
 
-        // 1. Map the CSV "Day" to the actual calendar date
-        const dateMap = {
-            "Thursday": "2026-06-04",
-            "Friday": "2026-06-05",
-            "Saturday": "2026-06-06",
-            "Sunday": "2026-06-07",
-            "Monday": "2026-06-08"
-        };
-
+        const dateMap = { "Thursday": "2026-06-04", "Friday": "2026-06-05", "Saturday": "2026-06-06", "Sunday": "2026-06-07", "Monday": "2026-06-08" };
         const dayOrder = { "Thursday": 1, "Friday": 2, "Saturday": 3, "Sunday": 4, "Monday": 5 };
 
-        // 2. Check if a specific event is in the past
         function isPast(dayStr, endTime) {
             const dateStr = dateMap[dayStr];
-            if (!dateStr) return false; 
-            
-            // Create a Date object for the event end time
-            // We assume end time is HH:MM
+            if (!dateStr) return false;
             const eventEnd = new Date(`${dateStr}T${endTime}:00`);
-            const now = new Date();
-            
-            return eventEnd < now;
+            return eventEnd < new Date();
         }
 
-        // 3. Load CSV
+        // --- NEW: Jump to Now logic ---
+        function jumpToNow() {
+            sortData('time'); // Ensure we are sorted chronologically
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            const currentDay = Object.keys(dateMap).find(key => dateMap[key] === todayStr);
+            const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+            const rows = tbody.querySelectorAll('tr');
+            let found = false;
+
+            for (let i = 0; i < allEvents.length; i++) {
+                const e = allEvents[i];
+                const [h, m] = (e['End Time'] || "00:00").split(':').map(Number);
+                const endMinutes = (h * 60) + m;
+                
+                // If the event day is today or in the future, AND it hasn't ended yet
+                if (dateMap[e.Day] >= todayStr) {
+                    if (dateMap[e.Day] > todayStr || endMinutes > nowMinutes) {
+                        rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        rows[i].style.backgroundColor = "rgba(0, 229, 255, 0.2)"; // Highlight briefly
+                        setTimeout(() => rows[i].style.backgroundColor = "", 2000);
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (!found) alert("No upcoming events found for today!");
+        }
+
+        // --- Existing Logic ---
         Papa.parse(CSV_FILE, {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
+            download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
                 allEvents = results.data.filter(e => e.Day);
                 sortData('time');
@@ -125,23 +141,10 @@
 
         function renderTable(data) {
             tbody.innerHTML = '';
-            
             data.forEach(e => {
                 const tr = document.createElement('tr');
-                
-                // If the event ended in the past, add the CSS class
-                if (isPast(e.Day, e['End Time'])) {
-                    tr.classList.add('past-event');
-                }
-
-                tr.innerHTML = `
-                    <td class="day-col">${e.Day || ''}</td>
-                    <td class="time-col">${e['Start Time'] || ''} - ${e['End Time'] || ''}</td>
-                    <td class="camp-col">${e.Camp || ''}</td>
-                    <td class="hood-col">${e.Neighbourhood || ''}</td>
-                    <td class="title-col">${e['Event Name'] || ''}</td>
-                    <td>${e['Description of Event'] || ''}</td>
-                `;
+                if (isPast(e.Day, e['End Time'])) tr.classList.add('past-event');
+                tr.innerHTML = `<td class="day-col">${e.Day || ''}</td><td class="time-col">${e['Start Time'] || ''} - ${e['End Time'] || ''}</td><td class="camp-col">${e.Camp || ''}</td><td class="hood-col">${e.Neighbourhood || ''}</td><td class="title-col">${e['Event Name'] || ''}</td><td>${e['Description of Event'] || ''}</td>`;
                 tbody.appendChild(tr);
             });
         }

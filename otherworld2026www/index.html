@@ -18,6 +18,29 @@
         }
         body { background-color: var(--bg-color); color: var(--text-color); font-family: sans-serif; margin: 0; padding: 20px; }
         
+        /* Map Action Button Layout */
+        .top-actions { text-align: center; margin-bottom: 25px; }
+        .map-btn {
+            display: inline-block;
+            background: transparent;
+            color: var(--neon-pink);
+            border: 2px solid var(--neon-pink);
+            padding: 10px 20px;
+            font-size: 15px;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 6px;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);
+            transition: all 0.2s ease-in-out;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .map-btn:hover {
+            background: var(--neon-pink);
+            color: var(--bg-color);
+            box-shadow: 0 0 20px var(--neon-pink);
+        }
+
         .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         
         /* Collapsible Accordion Core Styles */
@@ -73,7 +96,7 @@
         th { background-color: rgba(0, 229, 255, 0.1); color: var(--neon-blue); padding: 12px; text-align: left; border-bottom: 2px solid var(--neon-blue); text-transform: uppercase; font-size: 13px; }
         td { padding: 12px; border-bottom: 1px solid #1f2e1f; vertical-align: top; font-size: 14px; }
 
-        /* Sticky Sub-Header Rules (Desktop & Laptop Layout) */
+        /* Sticky Sub-Header Rules (Desktop Layout) */
         tr.sticky-subheader {
             position: sticky;
             top: 0;
@@ -99,15 +122,42 @@
         .title-col { color: var(--neon-yellow); font-weight: bold; }
         .hood-cell { font-weight: bold; }
 
-        /* --- PHONE & TABLET CARD FLIP OPTIMIZATIONS --- */
+        /* --- PHONE & TABLET CARD FLIP & SCALING OPTIMIZATIONS --- */
         @media (max-width: 768px) {
             body { padding: 10px; }
             h1 { font-size: 18px; }
             h2 { font-size: 12px; word-break: break-all; }
             
+            /* Responsive Mobile Map Button Scaling */
+            .map-btn {
+                display: block;
+                width: 100%;
+                max-width: 320px;
+                margin: 0 auto;
+                padding: 12px 20px;
+                font-size: 15px;
+                box-sizing: border-box;
+            }
+
+            /* Main Navigation Sizing Scaling overrides */
+            .controls button {
+                padding: 12px 20px;
+                font-size: 15px;
+                flex: 1 1 auto;
+                text-align: center;
+            }
+
+            /* Tag filter matrix finger padding overrides */
+            .tags-container .tag-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+                border-radius: 25px;
+                margin: 2px;
+            }
+
             .table-container { padding: 5px; background: transparent; }
             table, tbody, tr, td { display: block; width: 100%; box-sizing: border-box; }
-            thead { display: none; } /* Drop headers completely */
+            thead { display: none; }
             
             /* Mobile Sticky Subheader Bar Adjustment */
             tr.sticky-subheader {
@@ -124,7 +174,7 @@
                 box-shadow: 0 4px 12px rgba(0, 225, 255, 0.25);
             }
 
-            /* The Row-to-Card Morph Mechanics */
+            /* Card Morph Mechanics */
             tr.event-row {
                 background: var(--panel-bg);
                 margin-bottom: 12px;
@@ -139,9 +189,7 @@
                 border: none;
             }
             
-            /* Structural Card Layout rules */
-            .day-col { display: none; } /* Redundant when sticky blocks are active */
-            
+            .day-col { display: none; }
             .time-cell { font-size: 13px; color: #b5c7b5; font-weight: bold; display: inline-block; margin-right: 10px; }
             .camp-col { font-size: 13px; display: inline-block; margin-right: 10px; }
             .hood-cell { font-size: 13px; display: inline-block; }
@@ -157,21 +205,6 @@
                 color: #cccccc;
                 line-height: 1.4;
             }
-            /* 1. Scale up the main control buttons (Sort, Now, Filter Matrix) */
-            .controls button {
-                padding: 12px 20px;      /* Generous top/bottom and left/right spacing */
-                font-size: 15px;         /* Crisp, readable text size for mobile */
-                flex: 1 1 auto;          /* Allows buttons to expand evenly to fill the width */
-                text-align: center;
-            }
-        
-            /* 2. Scale up the 3-state tag filter buttons */
-            .tags-container .tag-btn {
-                padding: 10px 16px;      /* Makes them thick enough for easy thumb-tapping */
-                font-size: 14px;         /* Prevents text from feeling cramped */
-                border-radius: 25px;     /* Keeps the clean pill shape proportional */
-                margin: 2px;             /* Adds a tiny bit of breathing room between buttons */
-            }
         }
     </style>
 </head>
@@ -180,6 +213,12 @@
     <h1 style="text-align: center;">This is a mirror of the Rogue Raccoon When/Where/What (Not to be confused with the official What/Where/When) this should now update to match the source sheet after a refresh</h1>
     <h2 style="text-align: center;">https://docs.google.com/spreadsheets/d/e/2PACX-1vRIakaBzNVNdA3Y6v6ve54-CEKD22Tk4bREgvKI4noaPiqLqqc_YZwdwc2xXOMq0t3Ma6teLoa7p2Rf/pub?output=csv </h2>
     
+    <div class="top-actions">
+        <a href="https://otherworld.ca/wp-content/uploads/2026/05/2026_Map.pdf" target="_blank" class="map-btn">
+            🗺️ View Event Map (PDF)
+        </a>
+    </div>
+
     <div class="controls">
         <button id="btn-toggle-filters" onclick="toggleFilters()">⚙️ Filter Matrix (<span id="active-filter-count">0</span>)</button>
         <button id="btn-time" class="active" onclick="setSort('time')">Sort by Date & Time</button>
@@ -312,7 +351,6 @@
             if(type === 'camp') document.getElementById('btn-camp').classList.add('active');
             if(type === 'hood') document.getElementById('btn-hood').classList.add('active');
             
-            // Re-sync filter panel button state if open
             if(document.getElementById('tags-panel').classList.contains('open')) {
                 document.getElementById('btn-toggle-filters').classList.add('active');
             }
@@ -374,7 +412,7 @@
             const now = new Date();
             const todayStr = now.toISOString().split('T')[0];
             const nowMinutes = now.getHours() * 60 + now.getMinutes();
-            const rows = tbody.querySelectorAll('.event-row'); // Map accurately to physical data rows
+            const rows = tbody.querySelectorAll('.event-row');
             let found = false;
 
             for (let i = 0; i < visibleEvents.length; i++) {
@@ -406,13 +444,11 @@
             let currentGroupingHeader = "";
 
             data.forEach(e => {
-                // Determine targeted sticky subheader categorization text depending on sort configuration
                 let targetGroup = "";
                 if (currentSort === 'time') targetGroup = e.Day;
                 else if (currentSort === 'camp') targetGroup = e.Camp || "Unspecified Camp";
                 else if (currentSort === 'hood') targetGroup = e.Neighbourhood || "Roaming / Global Location";
 
-                // Inject a sticky divider break if the target grouping bounds shift
                 if (targetGroup !== currentGroupingHeader) {
                     const headerTr = document.createElement('tr');
                     headerTr.className = "sticky-subheader";

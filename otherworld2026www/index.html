@@ -62,8 +62,20 @@
         .tags-container.open { display: flex; }
         
         button { background: transparent; color: var(--neon-blue); border: 1px solid var(--neon-blue); padding: 8px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; transition: all 0.2s; }
-        button.active { background: var(--neon-blue); color: var(--bg-color); }
+        button.active { background: var(--neon-blue); color: var(--bg-color); border-color: var(--neon-blue); }
         
+        /* --- Filter Matrix Contrast CSS Rules --- */
+        #btn-toggle-filters { font-size: 14px; border-color: var(--neon-blue); color: var(--neon-blue); }
+        
+        /* State: Has active filters selected but panel is CLOSED */
+        #btn-toggle-filters.has-filters { border-color: var(--neon-green); color: var(--neon-green); }
+        
+        /* State: Panel is OPEN, no active filters */
+        #btn-toggle-filters.active { background: var(--neon-blue); color: var(--bg-color); border-color: var(--neon-blue); }
+        
+        /* State: Panel is OPEN AND has active filters selected (swaps theme to green + fixes contrast) */
+        #btn-toggle-filters.active.has-filters { background: var(--neon-green); color: var(--bg-color); border-color: var(--neon-green); }
+
         /* Special active styling for the Hide Past toggle */
         #btn-toggle-past.active {
             background: var(--neon-red);
@@ -73,8 +85,6 @@
 
         #btn-now { border-color: var(--neon-yellow); color: var(--neon-yellow); }
         #btn-now:hover { background: var(--neon-yellow); color: var(--bg-color); }
-        
-        #btn-toggle-filters { font-size: 14px; }
 
         /* 3-State Tri-Toggle Button Styles */
         .tag-btn { border-color: #444; color: #888; padding: 5px 12px; font-size: 12px; border-radius: 20px; transition: all 0.2s ease-in-out; }
@@ -121,8 +131,8 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
 
-        .past-event { opacity: 0.45; filter: grayscale(0.2); }
-        .past-event td { color: #aaa; }
+        /* --- Subtle Dimming Override For Completed Events --- */
+        .past-event { opacity: 0.65; }
 
         .day-col { color: var(--neon-green); font-weight: bold; }
         .camp-col { color: var(--neon-pink); font-weight: bold; }
@@ -238,298 +248,4 @@
     <div class="tags-container" id="tags-panel">
         <button class="tag-btn" onclick="cycleTag(this, 'Workshop / Class')">Workshop / Class</button>
         <button class="tag-btn" onclick="cycleTag(this, 'Interactive / Crafts')">Interactive / Crafts</button>
-        <button class="tag-btn" onclick="cycleTag(this, 'Food / Drink')">Food / Drink</button>
-        <button class="tag-btn" onclick="cycleTag(this, 'Performance / Show')">Performance / Show</button>
-        <button class="tag-btn" onclick="cycleTag(this, 'Wellness / Yoga')">Wellness / Yoga</button>
-        <button class="tag-btn" onclick="cycleTag(this, 'Refuge / Introspective')">Refuge / Introspective</button>
-        <button class="tag-btn" onclick="cycleTag(this, 'Music / Dance')">Music / Dance</button>
-        <button class="tag-btn" onclick="cycleTag(this, 'Game / Activity')">Game / Activity</button>
-        <button class="tag-btn" onclick="cycleTag(this, '19+')">19+</button>
-        <button class="tag-btn" onclick="cycleTag(this, 'Alcohol Involved')">Alcohol Involved</button>
-        <button class="tag-btn clear-btn" onclick="clearTags()">Clear Filters</button>
-    </div>
-
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Day</th>
-                    <th>Time</th>
-                    <th>Camp</th>
-                    <th>Neighbourhood</th>
-                    <th>Event</th>
-                    <th>Description</th>
-                </tr>
-            </thead>
-            <tbody id="events-body">
-                <tr><td colspan="6">Loading live schedule...</td></tr>
-            </tbody>
-        </table>
-    </div>
-
-    <script>
-        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRIakaBzNVNdA3Y6v6ve54-CEKD22Tk4bREgvKI4noaPiqLqqc_YZwdwc2xXOMq0t3Ma6teLoa7p2Rf/pub?output=csv";
-        
-        let allEvents = [];
-        let visibleEvents = [];
-        let currentSort = 'time';
-        let hidePastEvents = false; // Tracks whether completed events are being filtered out
-        
-        let tagStates = {
-            'Workshop / Class': 0, 'Interactive / Crafts': 0, 'Food / Drink': 0,
-            'Performance / Show': 0, 'Wellness / Yoga': 0, 'Refuge / Introspective': 0,
-            'Music / Dance': 0, 'Game / Activity': 0, '19+': 0, 'Alcohol Involved': 0
-        };
-        
-        const tbody = document.getElementById('events-body');
-
-        const hoodColors = {
-            "SPARK": "#FF9933", "ASHLAND": "#A9A9A9", "BLACK ROCK": "#696969",
-            "BROOD": "#800080", "COLLECTION": "#FF69B4", "CONDENSATION": "#00FFFF",
-            "DOACRACY": "#FFFF00", "EVAPORATION": "#ADD8E6", "KINDLE": "#FF00FF",
-            "MIDDLE EARTH": "#8B4513", "MOOP": "#39FF14", "PRECIPITATION": "#4169E1",
-            "ROAMING": "#D3D3D3", "SANDSTORM": "#F4A460", "SCORCH": "#FF4500",
-            "SIDEQUEST": "#9370DB", "SMOLDER": "#FF4444", "SOMEWHERE": "#FFFFFF",
-            "TINKER": "#7FFFD4", "YES.. AND?": "#00FF7F"
-        };
-
-        const dateMap = { "Thursday": "2026-06-04", "Friday": "2026-06-05", "Saturday": "2026-06-06", "Sunday": "2026-06-07", "Monday": "2026-06-08" };
-        const dayOrder = { "Thursday": 1, "Friday": 2, "Saturday": 3, "Sunday": 4, "Monday": 5 };
-
-        // Safer mobile date handling: builds parameters explicitly local
-        function isPast(dayStr, endTimeStr) {
-            const dateStr = dateMap[dayStr];
-            if (!dateStr || !endTimeStr) return false;
-            
-            const [year, month, day] = dateStr.split('-').map(Number);
-            const [hour, minute] = endTimeStr.split(':').map(Number);
-            
-            // JavaScript Month objects are 0-indexed (Jan = 0, June = 5)
-            const eventEnd = new Date(year, month - 1, day, hour, minute, 0);
-            return eventEnd < new Date();
-        }
-
-        Papa.parse(CSV_URL, {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
-            beforeFirstChunk: function(chunk) {
-                var rows = chunk.split(/\r\n|\r|\n/);
-                rows.splice(0, 2); 
-                return rows.join("\n");
-            },
-            complete: function(results) {
-                allEvents = results.data
-                    .filter(e => e.Day && e.Day.trim() !== "" && e.Day !== "Day")
-                    .map(e => {
-                        const cleaned = {};
-                        for (let key in e) {
-                            cleaned[key.trim()] = (e[key] || "").trim();
-                        }
-                        return cleaned;
-                    });
-                updateDisplay();
-            }
-        });
-
-        function toggleFilters() {
-            const panel = document.getElementById('tags-panel');
-            const btn = document.getElementById('btn-toggle-filters');
-            panel.classList.toggle('open');
-            if(panel.classList.contains('open')) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        }
-
-        function togglePastEvents() {
-            hidePastEvents = !hidePastEvents;
-            const btn = document.getElementById('btn-toggle-past');
-            if (hidePastEvents) {
-                btn.classList.add('active');
-                btn.innerText = "👁️ Show Past";
-            } else {
-                btn.classList.remove('active');
-                btn.innerText = "🙈 Hide Past";
-            }
-            updateDisplay();
-        }
-
-        function updateFilterCount() {
-            let activeCount = 0;
-            for (let tag in tagStates) {
-                if (tagStates[tag] !== 0) activeCount++;
-            }
-            document.getElementById('active-filter-count').innerText = activeCount;
-            const toggleBtn = document.getElementById('btn-toggle-filters');
-            if (activeCount > 0) {
-                toggleBtn.style.borderColor = "var(--neon-green)";
-                toggleBtn.style.color = "var(--neon-green)";
-            } else {
-                toggleBtn.style.borderColor = "var(--neon-blue)";
-                toggleBtn.style.color = "var(--neon-blue)";
-            }
-        }
-
-        function setSort(type) {
-            currentSort = type;
-            document.querySelectorAll('.controls button').forEach(btn => {
-                // Ensure we don't clear out our specialized toggle button styling states
-                if (btn.id !== 'btn-toggle-past' && btn.id !== 'btn-toggle-filters') {
-                    btn.classList.remove('active');
-                }
-            });
-            if(type === 'time') document.getElementById('btn-time').classList.add('active');
-            if(type === 'camp') document.getElementById('btn-camp').classList.add('active');
-            if(type === 'hood') document.getElementById('btn-hood').classList.add('active');
-            
-            if(document.getElementById('tags-panel').classList.contains('open')) {
-                document.getElementById('btn-toggle-filters').classList.add('active');
-            }
-            updateDisplay();
-        }
-
-        function cycleTag(btn, tagName) {
-            let currentState = tagStates[tagName];
-            if (currentState === 0) {
-                tagStates[tagName] = 1;
-                btn.className = "tag-btn include";
-            } else if (currentState === 1) {
-                tagStates[tagName] = -1;
-                btn.className = "tag-btn exclude";
-            } else {
-                tagStates[tagName] = 0;
-                btn.className = "tag-btn";
-            }
-            updateDisplay();
-        }
-
-        function clearTags() {
-            for (let tag in tagStates) tagStates[tag] = 0;
-            document.querySelectorAll('.tags-container .tag-btn').forEach(btn => {
-                if (!btn.classList.contains('clear-btn')) btn.className = "tag-btn";
-            });
-            updateDisplay();
-        }
-
-        function updateDisplay() {
-            let processed = allEvents.filter(e => {
-                // Feature Cutoff: Exclude past events instantly if requested
-                if (hidePastEvents && isPast(e.Day, e['End Time'])) {
-                    return false;
-                }
-
-                for (let tag in tagStates) {
-                    const state = tagStates[tag];
-                    const isTrue = e[tag] && e[tag].toUpperCase() === 'TRUE';
-                    if (state === 1 && !isTrue) return false;  
-                    if (state === -1 && isTrue) return false; 
-                }
-                return true;
-            });
-
-            processed.sort((a, b) => {
-                if (currentSort === 'time') {
-                    const dayA = dayOrder[a.Day] || 99;
-                    const dayB = dayOrder[b.Day] || 99;
-                    if (dayA !== dayB) return dayA - dayB;
-                    return (a['Start Time'] || "").localeCompare(b['Start Time'] || "");
-                } 
-                if (currentSort === 'camp') return (a.Camp || "").localeCompare(b.Camp || "");
-                if (currentSort === 'hood') return (a.Neighbourhood || "").localeCompare(b.Neighbourhood || "");
-            });
-
-            visibleEvents = processed;
-            updateFilterCount();
-            renderTable(processed);
-        }
-
-        function jumpToNow() {
-            setSort('time'); 
-            const now = new Date();
-            
-            // Build absolute Local YYYY-MM-DD instead of using UTC string splitting methods
-            const yyyy = now.getFullYear();
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            const dd = String(now.getDate()).padStart(2, '0');
-            const todayStr = `${yyyy}-${mm}-${dd}`;
-            
-            const nowMinutes = now.getHours() * 60 + now.getMinutes();
-            const rows = tbody.querySelectorAll('.event-row');
-            let found = false;
-
-            for (let i = 0; i < visibleEvents.length; i++) {
-                const e = visibleEvents[i];
-                const eventDate = dateMap[e.Day];
-                if (!eventDate) continue;
-                
-                const [h, m] = (e['End Time'] || "00:00").split(':').map(Number);
-                const endMinutes = (h * 60) + m;
-                
-                // Route comparisons safely based on calendar day equivalency
-                if (eventDate > todayStr) {
-                    // It's a completely future event day, snap here!
-                    rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    rows[i].style.backgroundColor = "rgba(0, 229, 255, 0.2)";
-                    setTimeout(() => rows[i].style.backgroundColor = "", 2000);
-                    found = true;
-                    break;
-                } else if (eventDate === todayStr) {
-                    // It's today, check if it finishes later than right now
-                    if (endMinutes > nowMinutes) {
-                        rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        rows[i].style.backgroundColor = "rgba(0, 229, 255, 0.2)";
-                        setTimeout(() => rows[i].style.backgroundColor = "", 2000);
-                        found = true;
-                        break;
-                    }
-                }
-            }
-            if (!found) alert("No matching upcoming visible events found!");
-        }
-
-        function renderTable(data) {
-            tbody.innerHTML = '';
-            if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#888; padding:30px;">No events found matching those filter selections.</td></tr>`;
-                return;
-            }
-            
-            let currentGroupingHeader = "";
-
-            data.forEach(e => {
-                let targetGroup = "";
-                if (currentSort === 'time') targetGroup = e.Day;
-                else if (currentSort === 'camp') targetGroup = e.Camp || "Unspecified Camp";
-                else if (currentSort === 'hood') targetGroup = e.Neighbourhood || "Roaming / Global Location";
-
-                if (targetGroup !== currentGroupingHeader) {
-                    const headerTr = document.createElement('tr');
-                    headerTr.className = "sticky-subheader";
-                    headerTr.innerHTML = `<td colspan="6">${targetGroup}</td>`;
-                    tbody.appendChild(headerTr);
-                    currentGroupingHeader = targetGroup;
-                }
-
-                const tr = document.createElement('tr');
-                tr.className = "event-row";
-                if (isPast(e.Day, e['End Time'])) tr.classList.add('past-event');
-                
-                const hoodKey = (e.Neighbourhood || "").toUpperCase();
-                const hoodColor = hoodColors[hoodKey] || "#ffffff";
-                
-                tr.innerHTML = `
-                    <td class="day-col">${e.Day}</td>
-                    <td class="time-cell">🕒 ${e['Start Time']} - ${e['End Time']}</td>
-                    <td class="camp-col">⛺ ${e.Camp}</td>
-                    <td class="hood-cell" style="color: ${hoodColor}">📍 ${e.Neighbourhood}</td>
-                    <td class="title-col">${e['Event Name']}</td>
-                    <td class="desc-cell">${e['Description of Event']}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-    </script>
-</body>
-</html>
+        <button class="tag-btn" onclick="cycleTag(

@@ -16,9 +16,101 @@
             --neon-yellow: #fffb00;
             --panel-bg: #111a12;
         }
-        body { background-color: var(--bg-color); color: var(--text-color); font-family: sans-serif; margin: 0; padding: 20px; }
+        body { 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
+            font-family: sans-serif; 
+            margin: 0; 
+            padding: 20px;
+            padding-top: 75px; /* Offset spacing for the fixed navigation menu bar */
+        }
         
-        /* Map Action Button Layout */
+        /* --- Persistent Fixed Navigation Header Component --- */
+        .sticky-controls-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 54px;
+            z-index: 100;
+            background-color: #09120a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(0, 229, 255, 0.4);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            box-sizing: border-box;
+            padding: 0 10px;
+        }
+
+        /* --- Floating Dropdown Menu Card Overlay --- */
+        .controls-dropdown {
+            display: none;
+            position: fixed;
+            top: 54px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 95%;
+            max-width: 650px;
+            background: var(--panel-bg);
+            border: 2px solid var(--neon-blue);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            padding: 15px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.9);
+            z-index: 99;
+            box-sizing: border-box;
+        }
+        .controls-dropdown.open { display: block; }
+
+        .controls { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        
+        /* Collapsible Accordion Core Styles */
+        .tags-container { 
+            display: none; 
+            justify-content: center; 
+            gap: 8px; 
+            margin-top: 15px;
+            padding-top: 15px;
+            flex-wrap: wrap; 
+            border-top: 1px dashed #223322; 
+        }
+        .tags-container.open { display: flex; }
+        
+        button { background: transparent; color: var(--neon-blue); border: 1px solid var(--neon-blue); padding: 8px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; transition: all 0.2s; }
+        button.active { background: var(--neon-blue); color: var(--bg-color); border-color: var(--neon-blue); }
+        
+        /* Fixed Bar Main Menu Toggle Styling Rules */
+        #bar-btn-controls { border-color: var(--neon-blue); color: var(--neon-blue); }
+        #bar-btn-controls.has-filters { border-color: var(--neon-green); color: var(--neon-green); }
+        #bar-btn-controls.active { background: var(--neon-blue); color: var(--bg-color); border-color: var(--neon-blue); }
+        #bar-btn-controls.active.has-filters { background: var(--neon-green); color: var(--bg-color); border-color: var(--neon-green); }
+
+        /* Dropdown internal matrix trigger button styling rules */
+        #btn-toggle-filters { font-size: 14px; border-color: var(--neon-blue); color: var(--neon-blue); }
+        #btn-toggle-filters.has-filters { border-color: var(--neon-green); color: var(--neon-green); }
+        #btn-toggle-filters.active { background: var(--neon-blue); color: var(--bg-color); border-color: var(--neon-blue); }
+        #btn-toggle-filters.active.has-filters { background: var(--neon-green); color: var(--bg-color); border-color: var(--neon-green); }
+
+        /* Special active styling for the Hide Past toggle */
+        #btn-toggle-past.active {
+            background: var(--neon-red);
+            color: var(--bg-color);
+            border-color: var(--neon-red);
+        }
+
+        #btn-now { border-color: var(--neon-yellow); color: var(--neon-yellow); }
+        #btn-now:hover { background: var(--neon-yellow); color: var(--bg-color); }
+
+        /* 3-State Tri-Toggle Button Styles */
+        .tag-btn { border-color: #444; color: #888; padding: 5px 12px; font-size: 12px; border-radius: 20px; transition: all 0.2s ease-in-out; }
+        .tag-btn.include { border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); background: rgba(57, 255, 20, 0.05); }
+        .tag-btn.exclude { border-color: var(--neon-red); color: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); background: rgba(255, 51, 51, 0.05); }
+        .tag-btn.clear-btn { border-color: #555; color: #aaa; }
+        .tag-btn.clear-btn:hover { background: #333; color: #fff; }
+
+        /* Top Map Link Layout Rules */
         .top-actions { text-align: center; margin-bottom: 25px; }
         .map-btn {
             display: inline-block;
@@ -35,90 +127,16 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        .map-btn:hover {
-            background: var(--neon-pink);
-            color: var(--bg-color);
-            box-shadow: 0 0 20px var(--neon-pink);
-        }
+        .map-btn:hover { background: var(--neon-pink); color: var(--bg-color); box-shadow: 0 0 20px var(--neon-pink); }
 
-        .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        
-        /* Collapsible Accordion Core Styles */
-        .tags-container { 
-            display: none; 
-            justify-content: center; 
-            gap: 8px; 
-            margin-bottom: 20px; 
-            flex-wrap: wrap; 
-            max-width: 1200px; 
-            margin-left: auto; 
-            margin-right: auto; 
-            padding: 15px; 
-            border-top: 1px dashed #223322; 
-            border-bottom: 1px dashed #223322;
-            background: rgba(17, 26, 18, 0.4);
-            border-radius: 8px;
-        }
-        .tags-container.open { display: flex; }
-        
-        button { background: transparent; color: var(--neon-blue); border: 1px solid var(--neon-blue); padding: 8px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; transition: all 0.2s; }
-        button.active { background: var(--neon-blue); color: var(--bg-color); border-color: var(--neon-blue); }
-        
-        /* --- Filter Matrix Contrast CSS Rules --- */
-        #btn-toggle-filters { font-size: 14px; border-color: var(--neon-blue); color: var(--neon-blue); }
-        
-        /* State: Has active filters selected but panel is CLOSED */
-        #btn-toggle-filters.has-filters { border-color: var(--neon-green); color: var(--neon-green); }
-        
-        /* State: Panel is OPEN, no active filters */
-        #btn-toggle-filters.active { background: var(--neon-blue); color: var(--bg-color); border-color: var(--neon-blue); }
-        
-        /* State: Panel is OPEN AND has active filters selected (swaps theme to green + fixes contrast) */
-        #btn-toggle-filters.active.has-filters { background: var(--neon-green); color: var(--bg-color); border-color: var(--neon-green); }
-
-        /* Special active styling for the Hide Past toggle */
-        #btn-toggle-past.active {
-            background: var(--neon-red);
-            color: var(--bg-color);
-            border-color: var(--neon-red);
-        }
-
-        #btn-now { border-color: var(--neon-yellow); color: var(--neon-yellow); }
-        #btn-now:hover { background: var(--neon-yellow); color: var(--bg-color); }
-
-        /* 3-State Tri-Toggle Button Styles */
-        .tag-btn { border-color: #444; color: #888; padding: 5px 12px; font-size: 12px; border-radius: 20px; transition: all 0.2s ease-in-out; }
-        
-        /* State: Must Include (Neon Green) */
-        .tag-btn.include { 
-            border-color: var(--neon-green); 
-            color: var(--neon-green); 
-            box-shadow: 0 0 10px var(--neon-green); 
-            background: rgba(57, 255, 20, 0.05); 
-        }
-        
-        /* State: Must NOT Include (Neon Red) */
-        .tag-btn.exclude { 
-            border-color: var(--neon-red); 
-            color: var(--neon-red); 
-            box-shadow: 0 0 10px var(--neon-red); 
-            background: rgba(255, 51, 51, 0.05); 
-        }
-        
-        .tag-btn.clear-btn { border-color: #555; color: #aaa; }
-        .tag-btn.clear-btn:hover { background: #333; color: #fff; }
-
+        /* Table & Layout Elements */
         .table-container { width: 100%; max-width: 1400px; margin: auto; background: var(--panel-bg); padding: 20px; border-radius: 10px; box-sizing: border-box; }
         table { width: 100%; border-collapse: collapse; }
         th { background-color: rgba(0, 229, 255, 0.1); color: var(--neon-blue); padding: 12px; text-align: left; border-bottom: 2px solid var(--neon-blue); text-transform: uppercase; font-size: 13px; }
         td { padding: 12px; border-bottom: 1px solid #1f2e1f; vertical-align: top; font-size: 14px; }
 
-        /* Sticky Sub-Header Rules (Desktop Layout) */
-        tr.sticky-subheader {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
+        /* Sticky Subheaders aligned below the fixed 54px header panel bar */
+        tr.sticky-subheader { position: sticky; top: 54px; z-index: 10; }
         tr.sticky-subheader td {
             background: #09120a !important;
             color: var(--neon-blue);
@@ -131,132 +149,84 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
 
-        /* --- Subtle Dimming Override For Completed Events --- */
         .past-event { opacity: 0.65; }
-
         .day-col { color: var(--neon-green); font-weight: bold; }
         .camp-col { color: var(--neon-pink); font-weight: bold; }
         .title-col { color: var(--neon-yellow); font-weight: bold; }
         .hood-cell { font-weight: bold; }
 
-        /* --- PHONE & TABLET CARD FLIP & SCALING OPTIMIZATIONS --- */
+        /* --- PHONE & TABLET SCALING OPTIMIZATIONS --- */
         @media (max-width: 768px) {
-            body { padding: 10px; }
+            body { padding: 10px; padding-top: 70px; }
             h1 { font-size: 18px; }
-            h2 { font-size: 12px; word-break: break-all; }
             
-            /* Responsive Mobile Map Button Scaling */
-            .map-btn {
-                display: block;
-                width: 100%;
-                max-width: 320px;
-                margin: 0 auto;
-                padding: 12px 20px;
-                font-size: 15px;
-                box-sizing: border-box;
-            }
+            .sticky-controls-bar button { padding: 8px 12px; font-size: 13.5px; }
+            .map-btn { display: block; width: 100%; max-width: 320px; margin: 0 auto; padding: 12px 20px; font-size: 15px; box-sizing: border-box; }
 
-            /* Main Navigation Sizing Scaling overrides */
-            .controls button {
-                padding: 12px 20px;
-                font-size: 15px;
-                flex: 1 1 auto;
-                text-align: center;
-            }
-
-            /* Tag filter matrix finger padding overrides */
-            .tags-container .tag-btn {
-                padding: 10px 16px;
-                font-size: 14px;
-                border-radius: 25px;
-                margin: 2px;
-            }
+            .controls button { padding: 12px 15px; font-size: 14px; flex: 1 1 auto; text-align: center; }
+            .tags-container .tag-btn { padding: 10px 16px; font-size: 14px; border-radius: 25px; margin: 2px; }
 
             .table-container { padding: 5px; background: transparent; }
             table, tbody, tr, td { display: block; width: 100%; box-sizing: border-box; }
             thead { display: none; }
             
-            /* Mobile Sticky Subheader Bar Adjustment */
-            tr.sticky-subheader {
-                position: sticky;
-                top: 0;
-                z-index: 20;
-                margin: 15px 0 10px 0;
-            }
-            tr.sticky-subheader td {
-                text-align: center;
-                border-radius: 6px;
-                border: 1px solid var(--neon-blue);
-                padding: 12px;
-                box-shadow: 0 4px 12px rgba(0, 225, 255, 0.25);
-            }
+            tr.sticky-subheader { position: sticky; top: 54px; z-index: 20; margin: 15px 0 10px 0; }
+            tr.sticky-subheader td { text-align: center; border-radius: 6px; border: 1px solid var(--neon-blue); padding: 12px; box-shadow: 0 4px 12px rgba(0, 225, 255, 0.25); }
 
-            /* Card Morph Mechanics */
-            tr.event-row {
-                background: var(--panel-bg);
-                margin-bottom: 12px;
-                border: 1px solid #1f2e1f;
-                border-radius: 8px;
-                padding: 14px;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-            }
-            
-            tr.event-row td {
-                padding: 3px 0;
-                border: none;
-            }
+            tr.event-row { background: var(--panel-bg); margin-bottom: 12px; border: 1px solid #1f2e1f; border-radius: 8px; padding: 14px; box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
+            tr.event-row td { padding: 3px 0; border: none; }
             
             .day-col { display: none; }
             .time-cell { font-size: 13px; color: #b5c7b5; font-weight: bold; display: inline-block; margin-right: 10px; }
             .camp-col { font-size: 13px; display: inline-block; margin-right: 10px; }
             .hood-cell { font-size: 13px; display: inline-block; }
-            
-            .title-col {
-                font-size: 16px;
-                margin: 6px 0 2px 0;
-                border-top: 1px dashed #223322;
-                padding-top: 6px;
-            }
-            .desc-cell {
-                font-size: 13.5px;
-                color: #cccccc;
-                line-height: 1.4;
-            }
+            .title-col { font-size: 16px; margin: 6px 0 2px 0; border-top: 1px dashed #223322; padding-top: 6px; }
+            .desc-cell { font-size: 13.5px; color: #cccccc; line-height: 1.4; }
         }
     </style>
 </head>
 <body>
 
-    <h1 style="text-align: center;">This is a mirror of the Rogue Raccoon When/Where/What (Not to be confused with the official What/Where/When) this should now update to match the source sheet after a refresh</h1>
-    <h2 style="text-align: center;">https://docs.google.com/spreadsheets/d/e/2PACX-1vRIakaBzNVNdA3Y6v6ve54-CEKD22Tk4bREgvKI4noaPiqLqqc_YZwdwc2xXOMq0t3Ma6teLoa7p2Rf/pub?output=csv </h2>
+    <div class="sticky-controls-bar">
+        <button id="bar-btn-controls" onclick="toggleControlsDropdown()">🎛️ Control Panel (<span id="active-filter-count-bar">0</span>)</button>
+        <button id="btn-now" onclick="jumpToNow()">🕒 Jump to Now</button>
+    </div>
+
+    <div class="controls-dropdown" id="controls-dropdown">
+        <div class="controls">
+            <button id="btn-toggle-filters" onclick="toggleFilters()">⚙️ Filter Matrix (<span id="active-filter-count">0</span>)</button>
+            <button id="btn-toggle-past" onclick="togglePastEvents()">🙈 Hide Past</button>
+            <button id="btn-time" class="active" onclick="setSort('time')">Sort by Date & Time</button>
+            <button id="btn-camp" onclick="setSort('camp')">Sort by Camp</button>
+            <button id="btn-hood" onclick="setSort('hood')">Sort by Location</button>
+        </div>
+
+        <div class="tags-container" id="tags-panel">
+            <button class="tag-btn" onclick="cycleTag(this, 'Workshop / Class')">Workshop / Class</button>
+            <button class="tag-btn" onclick="cycleTag(this, 'Interactive / Crafts')">Interactive / Crafts</button>
+            <button class="tag-btn" onclick="cycleTag(this, 'Food / Drink')">Food / Drink</button>
+            <button class="tag-btn" onclick="cycleTag(this, 'Performance / Show')">Performance / Show</button>
+            <button class="tag-btn" onclick="cycleTag(this, 'Wellness / Yoga')">Wellness / Yoga</button>
+            <button class="tag-btn" onclick="cycleTag(this, 'Refuge / Introspective')">Refuge / Introspective</button>
+            <button class="tag-btn" onclick="cycleTag(this, 'Music / Dance')">Music / Dance</button>
+            <button class="tag-btn" onclick="cycleTag(this, 'Game / Activity')">Game / Activity</button>
+            <button class="tag-btn" onclick="cycleTag(this, '19+')">19+</button>
+            <button class="tag-btn" onclick="cycleTag(this, 'Alcohol Involved')">Alcohol Involved</button>
+            <button class="tag-btn clear-btn" onclick="clearTags()">Clear Filters</button>
+        </div>
+    </div>
+
+    <h1 style="text-align: center; margin-top: 10px; font-size: 22px; line-height: 1.3;">Rogue Raccoon When/Where/What Schedule Mirror</h1>
+    <p style="text-align: center; margin: -5px 0 25px 0; font-size: 14px;">
+        <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vRIakaBzNVNdA3Y6v6ve54-CEKD22Tk4bREgvKI4noaPiqLqqc_YZwdwc2xXOMq0t3Ma6teLoa7p2Rf/pub?output=csv" target="_blank" style="color: var(--neon-blue); text-decoration: none; border-bottom: 1px dashed var(--neon-blue); font-weight: bold;">
+            🔗 View Source Google Sheet
+        </a>
+    </p>
     
     <div class="top-actions">
         <a href="https://otherworld.ca/wp-content/uploads/2026/05/2026_Map.pdf" target="_blank" class="map-btn">
             🗺️ View Event Map (PDF)
         </a>
-    </div>
-
-    <div class="controls">
-        <button id="btn-toggle-filters" onclick="toggleFilters()">⚙️ Filter Matrix (<span id="active-filter-count">0</span>)</button>
-        <button id="btn-toggle-past" onclick="togglePastEvents()">🙈 Hide Past</button>
-        <button id="btn-time" class="active" onclick="setSort('time')">Sort by Date & Time</button>
-        <button id="btn-camp" onclick="setSort('camp')">Sort by Camp</button>
-        <button id="btn-hood" onclick="setSort('hood')">Sort by Location</button>
-        <button id="btn-now" onclick="jumpToNow()">Jump to Now</button>
-    </div>
-
-    <div class="tags-container" id="tags-panel">
-        <button class="tag-btn" onclick="cycleTag(this, 'Workshop / Class')">Workshop / Class</button>
-        <button class="tag-btn" onclick="cycleTag(this, 'Interactive / Crafts')">Interactive / Crafts</button>
-        <button class="tag-btn" onclick="cycleTag(this, 'Food / Drink')">Food / Drink</button>
-        <button class="tag-btn" onclick="cycleTag(this, 'Performance / Show')">Performance / Show</button>
-        <button class="tag-btn" onclick="cycleTag(this, 'Wellness / Yoga')">Wellness / Yoga</button>
-        <button class="tag-btn" onclick="cycleTag(this, 'Refuge / Introspective')">Refuge / Introspective</button>
-        <button class="tag-btn" onclick="cycleTag(this, 'Music / Dance')">Music / Dance</button>
-        <button class="tag-btn" onclick="cycleTag(this, 'Game / Activity')">Game / Activity</button>
-        <button class="tag-btn" onclick="cycleTag(this, '19+')">19+</button>
-        <button class="tag-btn" onclick="cycleTag(this, 'Alcohol Involved')">Alcohol Involved</button>
-        <button class="tag-btn clear-btn" onclick="clearTags()">Clear Filters</button>
     </div>
 
     <div class="table-container">
@@ -340,6 +310,17 @@
             }
         });
 
+        function toggleControlsDropdown() {
+            const dropdown = document.getElementById('controls-dropdown');
+            const btn = document.getElementById('bar-btn-controls');
+            dropdown.classList.toggle('open');
+            if(dropdown.classList.contains('open')) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        }
+
         function toggleFilters() {
             const panel = document.getElementById('tags-panel');
             const btn = document.getElementById('btn-toggle-filters');
@@ -370,12 +351,16 @@
                 if (tagStates[tag] !== 0) activeCount++;
             }
             document.getElementById('active-filter-count').innerText = activeCount;
+            document.getElementById('active-filter-count-bar').innerText = activeCount;
             
             const toggleBtn = document.getElementById('btn-toggle-filters');
+            const barBtn = document.getElementById('bar-btn-controls');
             if (activeCount > 0) {
                 toggleBtn.classList.add('has-filters');
+                barBtn.classList.add('has-filters');
             } else {
                 toggleBtn.classList.remove('has-filters');
+                barBtn.classList.remove('has-filters');
             }
         }
 
@@ -451,6 +436,12 @@
         }
 
         function jumpToNow() {
+            // Auto collapse control overlay if open so user sees the scroll destination immediately
+            const dropdown = document.getElementById('controls-dropdown');
+            if (dropdown.classList.contains('open')) {
+                toggleControlsDropdown();
+            }
+
             setSort('time'); 
             const now = new Date();
             

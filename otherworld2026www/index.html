@@ -287,10 +287,16 @@
         const dateMap = { "Thursday": "2026-06-04", "Friday": "2026-06-05", "Saturday": "2026-06-06", "Sunday": "2026-06-07", "Monday": "2026-06-08" };
         const dayOrder = { "Thursday": 1, "Friday": 2, "Saturday": 3, "Sunday": 4, "Monday": 5 };
 
+        // Safer mobile date handling: builds parameters explicitly local
         function isPast(dayStr, endTimeStr) {
             const dateStr = dateMap[dayStr];
             if (!dateStr || !endTimeStr) return false;
-            const eventEnd = new Date(`${dateStr}T${endTimeStr}:00`);
+            
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const [hour, minute] = endTimeStr.split(':').map(Number);
+            
+            // JavaScript Month objects are 0-indexed (Jan = 0, June = 5)
+            const eventEnd = new Date(year, month - 1, day, hour, minute, 0);
             return eventEnd < new Date();
         }
 
@@ -410,7 +416,13 @@
         function jumpToNow() {
             setSort('time'); 
             const now = new Date();
-            const todayStr = now.toISOString().split('T')[0];
+            
+            // Build absolute Local YYYY-MM-DD instead of using UTC string splitting methods
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const todayStr = `${yyyy}-${mm}-${dd}`;
+            
             const nowMinutes = now.getHours() * 60 + now.getMinutes();
             const rows = tbody.querySelectorAll('.event-row');
             let found = false;
@@ -419,10 +431,21 @@
                 const e = visibleEvents[i];
                 const eventDate = dateMap[e.Day];
                 if (!eventDate) continue;
+                
                 const [h, m] = (e['End Time'] || "00:00").split(':').map(Number);
                 const endMinutes = (h * 60) + m;
-                if (eventDate >= todayStr) {
-                    if (eventDate > todayStr || endMinutes > nowMinutes) {
+                
+                // Route comparisons safely based on calendar day equivalency
+                if (eventDate > todayStr) {
+                    // It's a completely future event day, snap here!
+                    rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    rows[i].style.backgroundColor = "rgba(0, 229, 255, 0.2)";
+                    setTimeout(() => rows[i].style.backgroundColor = "", 2000);
+                    found = true;
+                    break;
+                } else if (eventDate === todayStr) {
+                    // It's today, check if it finishes later than right now
+                    if (endMinutes > nowMinutes) {
                         rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
                         rows[i].style.backgroundColor = "rgba(0, 229, 255, 0.2)";
                         setTimeout(() => rows[i].style.backgroundColor = "", 2000);

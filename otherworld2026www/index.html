@@ -18,14 +18,33 @@
         }
         body { background-color: var(--bg-color); color: var(--text-color); font-family: sans-serif; margin: 0; padding: 20px; }
         
-        .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-        .tags-container { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; max-width: 1200px; margin-left: auto; margin-right: auto; padding: 10px; border-top: 1px dashed #223322; }
+        .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        
+        /* Collapsible Accordion Core Styles */
+        .tags-container { 
+            display: none; 
+            justify-content: center; 
+            gap: 8px; 
+            margin-bottom: 20px; 
+            flex-wrap: wrap; 
+            max-width: 1200px; 
+            margin-left: auto; 
+            margin-right: auto; 
+            padding: 15px; 
+            border-top: 1px dashed #223322; 
+            border-bottom: 1px dashed #223322;
+            background: rgba(17, 26, 18, 0.4);
+            border-radius: 8px;
+        }
+        .tags-container.open { display: flex; }
         
         button { background: transparent; color: var(--neon-blue); border: 1px solid var(--neon-blue); padding: 8px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; transition: all 0.2s; }
         button.active { background: var(--neon-blue); color: var(--bg-color); }
         
         #btn-now { border-color: var(--neon-yellow); color: var(--neon-yellow); }
         #btn-now:hover { background: var(--neon-yellow); color: var(--bg-color); }
+        
+        #btn-toggle-filters { font-size: 14px; }
 
         /* 3-State Tri-Toggle Button Styles */
         .tag-btn { border-color: #444; color: #888; padding: 5px 12px; font-size: 12px; border-radius: 20px; transition: all 0.2s ease-in-out; }
@@ -49,10 +68,28 @@
         .tag-btn.clear-btn { border-color: #555; color: #aaa; }
         .tag-btn.clear-btn:hover { background: #333; color: #fff; }
 
-        .table-container { width: 100%; max-width: 1400px; margin: auto; overflow-x: auto; background: var(--panel-bg); padding: 20px; border-radius: 10px; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        .table-container { width: 100%; max-width: 1400px; margin: auto; background: var(--panel-bg); padding: 20px; border-radius: 10px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; }
         th { background-color: rgba(0, 229, 255, 0.1); color: var(--neon-blue); padding: 12px; text-align: left; border-bottom: 2px solid var(--neon-blue); text-transform: uppercase; font-size: 13px; }
         td { padding: 12px; border-bottom: 1px solid #1f2e1f; vertical-align: top; font-size: 14px; }
+
+        /* Sticky Sub-Header Rules (Desktop & Laptop Layout) */
+        tr.sticky-subheader {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        tr.sticky-subheader td {
+            background: #09120a !important;
+            color: var(--neon-blue);
+            font-weight: bold;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 10px 12px;
+            border-bottom: 2px solid rgba(0, 229, 255, 0.4);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
 
         .past-event { opacity: 0.45; filter: grayscale(0.2); }
         .past-event td { color: #aaa; }
@@ -61,6 +98,66 @@
         .camp-col { color: var(--neon-pink); font-weight: bold; }
         .title-col { color: var(--neon-yellow); font-weight: bold; }
         .hood-cell { font-weight: bold; }
+
+        /* --- PHONE & TABLET CARD FLIP OPTIMIZATIONS --- */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            h1 { font-size: 18px; }
+            h2 { font-size: 12px; word-break: break-all; }
+            
+            .table-container { padding: 5px; background: transparent; }
+            table, tbody, tr, td { display: block; width: 100%; box-sizing: border-box; }
+            thead { display: none; } /* Drop headers completely */
+            
+            /* Mobile Sticky Subheader Bar Adjustment */
+            tr.sticky-subheader {
+                position: sticky;
+                top: 0;
+                z-index: 20;
+                margin: 15px 0 10px 0;
+            }
+            tr.sticky-subheader td {
+                text-align: center;
+                border-radius: 6px;
+                border: 1px solid var(--neon-blue);
+                padding: 12px;
+                box-shadow: 0 4px 12px rgba(0, 225, 255, 0.25);
+            }
+
+            /* The Row-to-Card Morph Mechanics */
+            tr.event-row {
+                background: var(--panel-bg);
+                margin-bottom: 12px;
+                border: 1px solid #1f2e1f;
+                border-radius: 8px;
+                padding: 14px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            }
+            
+            tr.event-row td {
+                padding: 3px 0;
+                border: none;
+            }
+            
+            /* Structural Card Layout rules */
+            .day-col { display: none; } /* Redundant when sticky blocks are active */
+            
+            .time-cell { font-size: 13px; color: #b5c7b5; font-weight: bold; display: inline-block; margin-right: 10px; }
+            .camp-col { font-size: 13px; display: inline-block; margin-right: 10px; }
+            .hood-cell { font-size: 13px; display: inline-block; }
+            
+            .title-col {
+                font-size: 16px;
+                margin: 6px 0 2px 0;
+                border-top: 1px dashed #223322;
+                padding-top: 6px;
+            }
+            .desc-cell {
+                font-size: 13.5px;
+                color: #cccccc;
+                line-height: 1.4;
+            }
+        }
     </style>
 </head>
 <body>
@@ -69,13 +166,14 @@
     <h2 style="text-align: center;">https://docs.google.com/spreadsheets/d/e/2PACX-1vRIakaBzNVNdA3Y6v6ve54-CEKD22Tk4bREgvKI4noaPiqLqqc_YZwdwc2xXOMq0t3Ma6teLoa7p2Rf/pub?output=csv </h2>
     
     <div class="controls">
+        <button id="btn-toggle-filters" onclick="toggleFilters()">⚙️ Filter Matrix (<span id="active-filter-count">0</span>)</button>
         <button id="btn-time" class="active" onclick="setSort('time')">Sort by Date & Time</button>
         <button id="btn-camp" onclick="setSort('camp')">Sort by Camp</button>
         <button id="btn-hood" onclick="setSort('hood')">Sort by Location</button>
         <button id="btn-now" onclick="jumpToNow()">Jump to Now</button>
     </div>
 
-    <div class="tags-container">
+    <div class="tags-container" id="tags-panel">
         <button class="tag-btn" onclick="cycleTag(this, 'Workshop / Class')">Workshop / Class</button>
         <button class="tag-btn" onclick="cycleTag(this, 'Interactive / Crafts')">Interactive / Crafts</button>
         <button class="tag-btn" onclick="cycleTag(this, 'Food / Drink')">Food / Drink</button>
@@ -114,7 +212,6 @@
         let visibleEvents = [];
         let currentSort = 'time';
         
-        // Track states: 0 = Neutral, 1 = Must Include, -1 = Must NOT Include
         let tagStates = {
             'Workshop / Class': 0, 'Interactive / Crafts': 0, 'Food / Drink': 0,
             'Performance / Show': 0, 'Wellness / Yoga': 0, 'Refuge / Introspective': 0,
@@ -166,19 +263,49 @@
             }
         });
 
+        function toggleFilters() {
+            const panel = document.getElementById('tags-panel');
+            const btn = document.getElementById('btn-toggle-filters');
+            panel.classList.toggle('open');
+            if(panel.classList.contains('open')) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        }
+
+        function updateFilterCount() {
+            let activeCount = 0;
+            for (let tag in tagStates) {
+                if (tagStates[tag] !== 0) activeCount++;
+            }
+            document.getElementById('active-filter-count').innerText = activeCount;
+            const toggleBtn = document.getElementById('btn-toggle-filters');
+            if (activeCount > 0) {
+                toggleBtn.style.borderColor = "var(--neon-green)";
+                toggleBtn.style.color = "var(--neon-green)";
+            } else {
+                toggleBtn.style.borderColor = "var(--neon-blue)";
+                toggleBtn.style.color = "var(--neon-blue)";
+            }
+        }
+
         function setSort(type) {
             currentSort = type;
             document.querySelectorAll('.controls button').forEach(btn => btn.classList.remove('active'));
             if(type === 'time') document.getElementById('btn-time').classList.add('active');
             if(type === 'camp') document.getElementById('btn-camp').classList.add('active');
             if(type === 'hood') document.getElementById('btn-hood').classList.add('active');
+            
+            // Re-sync filter panel button state if open
+            if(document.getElementById('tags-panel').classList.contains('open')) {
+                document.getElementById('btn-toggle-filters').classList.add('active');
+            }
             updateDisplay();
         }
 
-        // Cycle tags through states: 0 (Neutral) -> 1 (Include) -> -1 (Exclude) -> 0
         function cycleTag(btn, tagName) {
             let currentState = tagStates[tagName];
-            
             if (currentState === 0) {
                 tagStates[tagName] = 1;
                 btn.className = "tag-btn include";
@@ -193,31 +320,24 @@
         }
 
         function clearTags() {
-            for (let tag in tagStates) {
-                tagStates[tag] = 0;
-            }
+            for (let tag in tagStates) tagStates[tag] = 0;
             document.querySelectorAll('.tags-container .tag-btn').forEach(btn => {
-                if (!btn.classList.contains('clear-btn')) {
-                    btn.className = "tag-btn";
-                }
+                if (!btn.classList.contains('clear-btn')) btn.className = "tag-btn";
             });
             updateDisplay();
         }
 
         function updateDisplay() {
-            // Evaluates both inclusion matrix laws and explicit exclusion bounds
             let processed = allEvents.filter(e => {
                 for (let tag in tagStates) {
                     const state = tagStates[tag];
                     const isTrue = e[tag] && e[tag].toUpperCase() === 'TRUE';
-                    
-                    if (state === 1 && !isTrue) return false;  // Must include, but matches false -> Hide
-                    if (state === -1 && isTrue) return false; // Must NOT include, but matches true -> Hide
+                    if (state === 1 && !isTrue) return false;  
+                    if (state === -1 && isTrue) return false; 
                 }
                 return true;
             });
 
-            // Sorting Engine rules 
             processed.sort((a, b) => {
                 if (currentSort === 'time') {
                     const dayA = dayOrder[a.Day] || 99;
@@ -230,6 +350,7 @@
             });
 
             visibleEvents = processed;
+            updateFilterCount();
             renderTable(processed);
         }
 
@@ -238,7 +359,7 @@
             const now = new Date();
             const todayStr = now.toISOString().split('T')[0];
             const nowMinutes = now.getHours() * 60 + now.getMinutes();
-            const rows = tbody.querySelectorAll('tr');
+            const rows = tbody.querySelectorAll('.event-row'); // Map accurately to physical data rows
             let found = false;
 
             for (let i = 0; i < visibleEvents.length; i++) {
@@ -266,8 +387,27 @@
                 tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#888; padding:30px;">No events found matching those filter selections.</td></tr>`;
                 return;
             }
+            
+            let currentGroupingHeader = "";
+
             data.forEach(e => {
+                // Determine targeted sticky subheader categorization text depending on sort configuration
+                let targetGroup = "";
+                if (currentSort === 'time') targetGroup = e.Day;
+                else if (currentSort === 'camp') targetGroup = e.Camp || "Unspecified Camp";
+                else if (currentSort === 'hood') targetGroup = e.Neighbourhood || "Roaming / Global Location";
+
+                // Inject a sticky divider break if the target grouping bounds shift
+                if (targetGroup !== currentGroupingHeader) {
+                    const headerTr = document.createElement('tr');
+                    headerTr.className = "sticky-subheader";
+                    headerTr.innerHTML = `<td colspan="6">${targetGroup}</td>`;
+                    tbody.appendChild(headerTr);
+                    currentGroupingHeader = targetGroup;
+                }
+
                 const tr = document.createElement('tr');
+                tr.className = "event-row";
                 if (isPast(e.Day, e['End Time'])) tr.classList.add('past-event');
                 
                 const hoodKey = (e.Neighbourhood || "").toUpperCase();
@@ -275,11 +415,11 @@
                 
                 tr.innerHTML = `
                     <td class="day-col">${e.Day}</td>
-                    <td>${e['Start Time']} - ${e['End Time']}</td>
-                    <td class="camp-col">${e.Camp}</td>
-                    <td class="hood-cell" style="color: ${hoodColor}">${e.Neighbourhood}</td>
+                    <td class="time-cell">🕒 ${e['Start Time']} - ${e['End Time']}</td>
+                    <td class="camp-col">⛺ ${e.Camp}</td>
+                    <td class="hood-cell" style="color: ${hoodColor}">📍 ${e.Neighbourhood}</td>
                     <td class="title-col">${e['Event Name']}</td>
-                    <td>${e['Description of Event']}</td>
+                    <td class="desc-cell">${e['Description of Event']}</td>
                 `;
                 tbody.appendChild(tr);
             });

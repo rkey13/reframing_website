@@ -22,7 +22,7 @@
             font-family: sans-serif; 
             margin: 0; 
             padding: 20px;
-            padding-top: 75px; /* Offset spacing for the fixed navigation menu bar */
+            padding-top: 75px; /* Offset spacing for fixed navigation menu bar */
         }
         
         /* --- Persistent Fixed Navigation Header Component --- */
@@ -44,7 +44,7 @@
             padding: 0 10px;
         }
 
-        /* --- Floating Dropdown Menu Card Overlay --- */
+        /* --- Floating Dropdown Menu Card Overlay (With Safari Mobile Scroll Fixes) --- */
         .controls-dropdown {
             display: none;
             position: fixed;
@@ -53,6 +53,12 @@
             transform: translateX(-50%);
             width: 95%;
             max-width: 650px;
+            
+            /* iOS Safari Fixes: Prevent cutting off content by defining bounds and enabling inner-scrolling */
+            max-height: calc(100vh - 70px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch; 
+            
             background: var(--panel-bg);
             border: 2px solid var(--neon-blue);
             border-top: none;
@@ -135,7 +141,7 @@
         th { background-color: rgba(0, 229, 255, 0.1); color: var(--neon-blue); padding: 12px; text-align: left; border-bottom: 2px solid var(--neon-blue); text-transform: uppercase; font-size: 13px; }
         td { padding: 12px; border-bottom: 1px solid #1f2e1f; vertical-align: top; font-size: 14px; }
 
-        /* Sticky Subheaders aligned below the fixed 54px header panel bar */
+        /* Sticky Subheaders aligned below fixed 54px header panel bar */
         tr.sticky-subheader { position: sticky; top: 54px; z-index: 10; }
         tr.sticky-subheader td {
             background: #09120a !important;

@@ -22,7 +22,7 @@
             font-family: sans-serif; 
             margin: 0; 
             padding: 20px;
-            padding-top: 75px; /* Offset spacing for fixed navigation menu bar */
+            padding-top: 75px; /* Offset spacing for the fixed navigation menu bar */
         }
         
         /* --- Persistent Fixed Navigation Header Component --- */
@@ -36,12 +36,38 @@
             background-color: #09120a;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 10px;
+            justify-content: space-between;
+            gap: 8px;
             border-bottom: 1px solid rgba(0, 229, 255, 0.4);
             box-shadow: 0 4px 15px rgba(0,0,0,0.6);
             box-sizing: border-box;
-            padding: 0 10px;
+            padding: 0 12px;
+        }
+
+        /* --- Global Instant Search Field Box --- */
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            background: #111a12;
+            border: 1px solid var(--neon-blue);
+            color: var(--text-color);
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            outline: none;
+            min-width: 90px;
+            transition: all 0.2s ease-in-out;
+            box-sizing: border-box;
+        }
+        .search-box:focus {
+            border-color: var(--neon-yellow);
+            box-shadow: 0 0 10px rgba(255, 251, 0, 0.3);
+            background: #162418;
+        }
+        .search-box::placeholder {
+            color: rgba(224, 224, 224, 0.4);
+            font-weight: normal;
         }
 
         /* --- Floating Dropdown Menu Card Overlay (With Safari Mobile Scroll Fixes) --- */
@@ -84,7 +110,7 @@
         }
         .tags-container.open { display: flex; }
         
-        button { background: transparent; color: var(--neon-blue); border: 1px solid var(--neon-blue); padding: 8px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; transition: all 0.2s; }
+        button { background: transparent; color: var(--neon-blue); border: 1px solid var(--neon-blue); padding: 8px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; transition: all 0.2s; white-space: nowrap; }
         button.active { background: var(--neon-blue); color: var(--bg-color); border-color: var(--neon-blue); }
         
         /* Fixed Bar Main Menu Toggle Styling Rules */
@@ -166,7 +192,10 @@
             body { padding: 10px; padding-top: 70px; }
             h1 { font-size: 18px; }
             
-            .sticky-controls-bar button { padding: 8px 12px; font-size: 13.5px; }
+            .sticky-controls-bar { padding: 0 8px; gap: 6px; }
+            .sticky-controls-bar button { padding: 8px 10px; font-size: 12px; }
+            .search-box { padding: 7px 10px; font-size: 13px; }
+
             .map-btn { display: block; width: 100%; max-width: 320px; margin: 0 auto; padding: 12px 20px; font-size: 15px; box-sizing: border-box; }
 
             .controls button { padding: 12px 15px; font-size: 14px; flex: 1 1 auto; text-align: center; }
@@ -194,8 +223,9 @@
 <body>
 
     <div class="sticky-controls-bar">
-        <button id="bar-btn-controls" onclick="toggleControlsDropdown()">🎛️ Control Panel (<span id="active-filter-count-bar">0</span>)</button>
-        <button id="btn-now" onclick="jumpToNow()">🕒 Jump to Now</button>
+        <button id="bar-btn-controls" onclick="toggleControlsDropdown()">🎛️ Controls (<span id="active-filter-count-bar">0</span>)</button>
+        <input type="text" id="main-search" class="search-box" placeholder="🔍 Search schedule..." oninput="handleSearch(this.value)">
+        <button id="btn-now" onclick="jumpToNow()">🕒 Now</button>
     </div>
 
     <div class="controls-dropdown" id="controls-dropdown">
@@ -260,6 +290,7 @@
         let visibleEvents = [];
         let currentSort = 'time';
         let hidePastEvents = false; 
+        let searchQuery = "";
         
         let tagStates = {
             'Workshop / Class': 0, 'Interactive / Crafts': 0, 'Food / Drink': 0,
@@ -351,6 +382,11 @@
             updateDisplay();
         }
 
+        function handleSearch(val) {
+            searchQuery = val.trim();
+            updateDisplay();
+        }
+
         function updateFilterCount() {
             let activeCount = 0;
             for (let tag in tagStates) {
@@ -412,19 +448,35 @@
 
         function updateDisplay() {
             let processed = allEvents.filter(e => {
+                // 1. Hide Past Filtering
                 if (hidePastEvents && isPast(e.Day, e['End Time'])) {
                     return false;
                 }
 
+                // 2. Tag Matrix Module Filtering
                 for (let tag in tagStates) {
                     const state = tagStates[tag];
                     const isTrue = e[tag] && e[tag].toUpperCase() === 'TRUE';
                     if (state === 1 && !isTrue) return false;  
                     if (state === -1 && isTrue) return false; 
                 }
+
+                // 3. Multi-Field Global Input String Search Filtering
+                if (searchQuery) {
+                    const query = searchQuery.toLowerCase();
+                    const nameMatch = (e['Event Name'] || "").toLowerCase().includes(query);
+                    const campMatch = (e.Camp || "").toLowerCase().includes(query);
+                    const hoodMatch = (e.Neighbourhood || "").toLowerCase().includes(query);
+                    const descMatch = (e['Description of Event'] || "").toLowerCase().includes(query);
+                    
+                    if (!nameMatch && !campMatch && !hoodMatch && !descMatch) {
+                        return false;
+                    }
+                }
                 return true;
             });
 
+            // 4. Multi-mode Structured Sorting Execution
             processed.sort((a, b) => {
                 if (currentSort === 'time') {
                     const dayA = dayOrder[a.Day] || 99;
@@ -442,7 +494,7 @@
         }
 
         function jumpToNow() {
-            // Auto collapse control overlay if open so user sees the scroll destination immediately
+            // Auto collapse control overlay if open so user sees destination instantly
             const dropdown = document.getElementById('controls-dropdown');
             if (dropdown.classList.contains('open')) {
                 toggleControlsDropdown();

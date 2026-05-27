@@ -157,6 +157,21 @@
                 color: #cccccc;
                 line-height: 1.4;
             }
+            /* 1. Scale up the main control buttons (Sort, Now, Filter Matrix) */
+            .controls button {
+                padding: 12px 20px;      /* Generous top/bottom and left/right spacing */
+                font-size: 15px;         /* Crisp, readable text size for mobile */
+                flex: 1 1 auto;          /* Allows buttons to expand evenly to fill the width */
+                text-align: center;
+            }
+        
+            /* 2. Scale up the 3-state tag filter buttons */
+            .tags-container .tag-btn {
+                padding: 10px 16px;      /* Makes them thick enough for easy thumb-tapping */
+                font-size: 14px;         /* Prevents text from feeling cramped */
+                border-radius: 25px;     /* Keeps the clean pill shape proportional */
+                margin: 2px;             /* Adds a tiny bit of breathing room between buttons */
+            }
         }
     </style>
 </head>
